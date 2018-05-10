@@ -2,6 +2,6 @@
   "name": "jstools",
   "version": "0.0.1",
   "scripts": {
-    "test": "src/test/js/contextualizeTest.js"
+    "test": "node src/test/js/contextualizeTest.js"
   }
 }
