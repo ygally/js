@@ -1,19 +1,17 @@
-var L = 'length',
+var LEN = 'length',
     RE_FMT = "[{][{]K[}][}]",
-    DEFAULT_RE
-      = new RegExp(RE_FMT
-      .replace("K", "([^}]+)")),
+    DEFAULT_RE = new RegExp(RE_FMT.replace("K", "([^}]+)")),
     UNDEFINED,
     isArray = Array.isArray;
 function collect(obj){
-    return function(kvPair) {
-        obj[kvPair.key] = kvPair.value;
-    };
+    return function(kvPair) {
+        obj[kvPair.key] = kvPair.value;
+    };
 }
 function get(D, req) {
     if (req) {
         if (isArray(req)) {
-            if (req[L]) {
+            if (req[LEN]) {
                 var R = get(D, req[0]);
                 return R !== UNDEFINED?
                     R:
@@ -25,7 +23,7 @@ function get(D, req) {
     }
 }
 function expFrom(D, T, RE) {
-    console.log('expanding '+T+' [pat: ' +RE+']');
+    //console.log('expanding '+T+' [pat: ' +RE+']');
     if (RE.test(T)) {
         var R = RegExp.$1;
         return expFrom(D,
