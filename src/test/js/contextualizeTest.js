@@ -6,24 +6,24 @@ var data = {
 	   simpleCar: "Bentley",
 	   carTwo: "Ferrari",
 	   op1: 4,
-	   res: "8"
+	   strOp2: "8"
 	 };
 	 
 function square(n) {
 	   return n*n;
 }
 var defs = [
-  {name: "res", text: "{{dir}}/{{file}}"},
-  {name: "double", text: "{{op1}} + {{op1}} = {{res}}"},
+  {name: "filepath", text: "{{dir}}/{{file}}"},
+  {name: "double", text: "{{op1}} + {{op1}} = {{strOp2}}"},
   {name: "str", req: "simpleCar"},
   {name: "required", req: ["carOne", "carTwo"]},
   {name: "num", req: "op1", type: 'text'},
-  {name: "square", req: "res", type: 'int', fmt: square}
+  {name: "square", req: "strOp2", type: 'int', fmt: square}
 ];
 
 test("tpl txt fmt", a => {
 	   var R = contextualize(data).translate(defs);
-    a.equals(R.res, "root/test/yg.nfo",
+    a.equals(R.filepath, "root/test/yg.nfo",
     	  "res should be the en path");
 });
 
