@@ -10,7 +10,7 @@ var data = {
 	 };
 	 
 function square(n) {
-	   return n*n;
+	   return n * n;
 }
 var defs = [
   {name: "filepath", text: "{{dir}}/{{file}}"},
@@ -33,25 +33,25 @@ test("twice op1 fmt", a => {
     	  "doudle should show 4+4 op");
 });
 
-test("old required car", a => {
+test("required car", a => {
 	   var R = contextualize(data).translate(defs);
     a.equals(R.str, "Bentley",
     	  "simple car should be Bentley");
 });
 
-test("old double required car", a => {
+test("double required car", a => {
 	   var R = contextualize(data).translate(defs);
     a.equals(R.required, "Ferrari",
     	  "car should have fell to Ferrari");
 });
 
-test("number in str", a => {
+test("type number to str", a => {
 	   var R = contextualize(data).translate(defs);
     a.equals(R.num, "4",
     	  "number in text format should result in string");
 });
 
-test("string nb into nb", a => {
+test("type string to nb & format", a => {
 	   var R = contextualize(data).translate(defs);
     a.equals(R.square, 64,
     	  "should get nb 8x8 product");
@@ -67,4 +67,18 @@ test("single definition", a => {
 	   	});
     a.equals(rabbit.food, 'carrot&salad',
     	  "rabbit food is carrot&salad");
+});
+
+test("old require compat", a => {
+	   var account = contextualize({
+	   	    SITE: '221',
+	   	    traffic: 1
+	   	}).translate([
+	   	    {name: 'site', require: ['site', 'SITE']},
+	   	    {name: 'siteId', type:'int', require: ['site', 'SITE']},
+	   	    {name: 'source', type:'int', require: 'traffic'}
+	   	]);
+    a.equals(account.site, '221', "site id is wrong (str)");
+    a.equals(account.siteId, 221, "site id is wrong (int)");
+    a.equals(account.source, 1, "source is wrong");
 });

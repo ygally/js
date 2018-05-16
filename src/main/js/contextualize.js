@@ -3,6 +3,7 @@ var LEN = 'length',
     DEFAULT_RE = new RegExp(RE_FMT.replace("K", "([^}]+)")),
     UNDEFINED,
     isArray = Array.isArray;
+
 function collector(obj) {
     return function(kvPair) {
         obj[kvPair[0]] = kvPair[1];
@@ -23,14 +24,12 @@ function get(D, req) {
     }
 }
 function expFrom(D, T, RE) {
-    //console.log('expanding '+T+' [pat: ' +RE+']');
     if (RE.test(T)) {
-        var R = RegExp.$1;
-        return expFrom(D,
-            T.replace(
-                 new RegExp(RE_FMT.replace("K", R), "g"),
-                 get(D, R)),
-            RE);
+        var R = RegExp.$1,
+            pattern = RE_FMT.replace("K", R);
+        pattern = new RegExp(pattern, "g");
+        T = T.replace(pattern, get(D, R));
+        return expFrom(D, T, RE);
     }
     return T;
 }
@@ -39,12 +38,12 @@ function contextualize(D, RE) {
         if (isArray(def)) {
             var accu = {};
             def.map(innerTranslate)
-                .forEach(collector(accu));
+               .forEach(collector(accu));
             return accu;
         } 
         return [def.name, def.text ?
-                expFrom(D, def.text, RE || DEFAULT_RE):
-                get(D, def.req)];
+            expFrom(D, def.text, RE || DEFAULT_RE):
+            get(D, def.require || def.req)];
     }
     return {
         translate: function translate(def) {
