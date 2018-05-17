@@ -13,32 +13,31 @@ var types = {
     "int": toNumber
 }
 function get(data, req, type, fmt) {
-    var R;
+    var value;
     if (req) {
         if (isArray(req)) {
             if (req.length) {
-                R = get(data, req[0], type, fmt);
-                return R !== UNDEFINED?
-                    R:
+                value = get(data, req[0], type, fmt);
+                return value !== UNDEFINED? value:
                     get(data, req.slice(1), type, fmt);
             }
             return UNDEFINED;
         }
-	       R = data[req];
-	       if (R === UNDEFINED) {
-	           return R;
+	       value = data[req];
+	       if (value === UNDEFINED) {
+	           return value;
 	       	}
 	       type = type && types[type] || identity;
-        R = type(R);
-        return (fmt||identity)(R);
+        value = type(value);
+        return (fmt||identity)(value);
     }
 }
 function expFrom(data, T, RE) {
     if (RE.test(T)) {
-        var R = RegExp.$1, 
-            pattern = RE_FMT.replace("K", R);
+        var value = RegExp.$1,
+            pattern = RE_FMT.replace("K", value);
         pattern = new RegExp(pattern, "g");
-        T = T.replace(pattern, get(data, R));
+        T = T.replace(pattern, get(data, value));
         return expFrom(data, T, RE);
     }
     return T;

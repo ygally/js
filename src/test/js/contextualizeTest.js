@@ -8,7 +8,6 @@ var data = {
 	   op1: 4,
 	   strOp2: "8"
 	 };
-	 
 function square(n) {
 	   return n * n;
 }
