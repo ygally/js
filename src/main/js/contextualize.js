@@ -12,18 +12,18 @@ var types = {
     "text": toString,
     "int": toNumber
 }
-function get(data, req, type, fmt) {
+function get(data, key, type, fmt) {
     var value;
-    if (req) {
-        if (isArray(req)) {
-            if (req.length) {
-                value = get(data, req[0], type, fmt);
+    if (key) {
+        if (isArray(key)) {
+            if (key.length) {
+                value = get(data, key[0], type, fmt);
                 return value !== UNDEFINED? value:
-                    get(data, req.slice(1), type, fmt);
+                    get(data, key.slice(1), type, fmt);
             }
             return UNDEFINED;
         }
-	       value = data[req];
+	       value = data[key];
 	       if (value === UNDEFINED) {
 	           return value;
 	       	}
@@ -32,15 +32,15 @@ function get(data, req, type, fmt) {
         return (fmt||identity)(value);
     }
 }
-function expFrom(data, T, RE) {
-    if (RE.test(T)) {
-        var value = RegExp.$1,
-            pattern = RE_FMT.replace("K", value);
+function expFrom(data, text, RE) {
+    if (RE.test(text)) {
+        var key = RegExp.$1,
+            pattern = RE_FMT.replace("K", key);
         pattern = new RegExp(pattern, "g");
-        T = T.replace(pattern, get(data, value));
-        return expFrom(data, T, RE);
+        text = text.replace(pattern, get(data, key));
+        return expFrom(data, text, RE);
     }
-    return T;
+    return text;
 }
 function collectInto(result) {
     return function(kvPair) {
