@@ -1,5 +1,4 @@
-var LEN = 'length',
-    RE_FMT = "[{][{]K[}][}]",
+var RE_FMT = "[{][{]K[}][}]",
     DEFAULT_RE = new RegExp(RE_FMT.replace("K", "([^}]+)")),
     UNDEFINED,
     isArray = Array.isArray;
@@ -17,7 +16,7 @@ function get(D, req, type, fmt) {
     var R;
     if (req) {
         if (isArray(req)) {
-            if (req[LEN]) {
+            if (req.length) {
                 R = get(D, req[0], type, fmt);
                 return R !== UNDEFINED?
                     R:
