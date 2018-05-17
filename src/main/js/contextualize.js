@@ -6,14 +6,12 @@ var LEN = 'length',
 function identity(d) { return d; }
 function toString(d) { return '' + d; }
 function toNumber(d) { return +d; }
+function asArray(d) {
+	   return isArray(d)? d: [d];
+}
 var types = {
     "text": toString,
     "int": toNumber
-}
-function collector(obj) {
-    return function(kvPair) {
-        obj[kvPair[0]] = kvPair[1];
-    };
 }
 function get(D, req, type, fmt) {
     var R;
@@ -46,23 +44,27 @@ function expFrom(D, T, RE) {
     }
     return T;
 }
-
+function collectInto(obj) {
+    return function(kvPair) {
+        obj[kvPair[0]] = kvPair[1];
+    };
+}
 function contextualize(D, RE) {
-    function innerTranslate(def) {
-        if (isArray(def)) {
+    function innerTranslate(definition) {
+        if (isArray(definition)) {
             var accu = {};
-            def.map(innerTranslate)
-               .forEach(collector(accu));
+            definition.map(innerTranslate)
+                .forEach(collectInto(accu));
             return accu;
         } 
-        return [def.name, def.text?
-            expFrom(D, def.text, RE || DEFAULT_RE):
-            get(D, def.require || def.req, def.type, def.fmt)
+        return [definition.name, definition.text?
+            expFrom(D, definition.text, RE || DEFAULT_RE):
+            get(D, definition.require || definition.req, definition.type, definition.fmt)
         ];
     }
     return {
-        translate: function translate(def) {
-        	   return innerTranslate(isArray(def)? def: [def]);
+        translate: function translate(definition) {
+        	   return innerTranslate(asArray(definition));
         }
     };
 }
