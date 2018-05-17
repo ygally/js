@@ -12,19 +12,19 @@ var types = {
     "text": toString,
     "int": toNumber
 }
-function get(D, req, type, fmt) {
+function get(data, req, type, fmt) {
     var R;
     if (req) {
         if (isArray(req)) {
             if (req.length) {
-                R = get(D, req[0], type, fmt);
+                R = get(data, req[0], type, fmt);
                 return R !== UNDEFINED?
                     R:
-                    get(D, req.slice(1), type, fmt);
+                    get(data, req.slice(1), type, fmt);
             }
             return UNDEFINED;
         }
-	       R = D[req];
+	       R = data[req];
 	       if (R === UNDEFINED) {
 	           return R;
 	       	}
@@ -33,32 +33,32 @@ function get(D, req, type, fmt) {
         return (fmt||identity)(R);
     }
 }
-function expFrom(D, T, RE) {
+function expFrom(data, T, RE) {
     if (RE.test(T)) {
         var R = RegExp.$1, 
             pattern = RE_FMT.replace("K", R);
         pattern = new RegExp(pattern, "g");
-        T = T.replace(pattern, get(D, R));
-        return expFrom(D, T, RE);
+        T = T.replace(pattern, get(data, R));
+        return expFrom(data, T, RE);
     }
     return T;
 }
-function collectInto(obj) {
+function collectInto(result) {
     return function(kvPair) {
-        obj[kvPair[0]] = kvPair[1];
+        result[kvPair[0]] = kvPair[1];
     };
 }
-function contextualize(D, RE) {
+function contextualize(data, RE) {
     function innerTranslate(definition) {
         if (isArray(definition)) {
-            var accu = {};
+            var result = {};
             definition.map(innerTranslate)
-                .forEach(collectInto(accu));
-            return accu;
+                .forEach(collectInto(result));
+            return result;
         } 
         return [definition.name, definition.text?
-            expFrom(D, definition.text, RE || DEFAULT_RE):
-            get(D, definition.require || definition.req, definition.type, definition.fmt)
+            expFrom(data, definition.text, RE || DEFAULT_RE):
+            get(data, definition.require || definition.req, definition.type, definition.fmt)
         ];
     }
     return {
