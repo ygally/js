@@ -34,46 +34,4 @@ var main = (function(dependencies) {
     return main;
 }());
 
-main(
-	  'provide:ev.hello',
-	  function(ev) {
-	  	   function world() {
-	 	        console.log('hello world');
-	      }
-	      return { world: world };
-    });
-    
-main(
-	  'provide:ev.deux',
-	  function(ev) {
-	  	   function show(name) {
-	 	        console.log('Yo '+(name||'Deux'));
-	      }
-	      return { show: show };
-    });
-
-main(
-	  ['ev.hello', 'ev.deux'],
-	  function(ev, hello, deux) {
-	      hello.world();
-	      hello.world();
-	      	deux.show('toto');
-    });
-
-main(
-	  'provide:ev.full',
-	  ['ev.hello', 'ev.deux'],
-	  function(ev, hello, deux) {
-	      return {
-	      	    hello: hello.world,
-	      	    deux: deux.show
-	      	};
-    });
-  
-// another file
-main(
-   	'ev.full',
-	  function(ev, full) {
-	      full.hello();
-	      full.deux();
-    });
+module.exports = main;
