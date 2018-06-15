@@ -1,13 +1,13 @@
-var main = (function(dependencies) {
-	   dependencies = {};
-	   var window,
-	       NULL,
+var main = (function(modules) {
+	   modules = {};
+	   var NULL,
+	       window,
 	       RE_PROVIDE = /^provide:/;
 	   function retrieveDep(name) {
-	   	    if (!dependencies[name]) { throw 'No module "' + dep + '" provided'; }
-	   	    return dependencies[name];
+	   	    if (!modules[name]) { throw 'No module "' + dep + '" provided'; }
+	   	    return modules[name];
 	   }
-    function main(name, dep, define) {
+    function core(name, dep, define) {
     	    if (RE_PROVIDE.test(name)) {
     	     	   name = name
     	     	        .replace(RE_PROVIDE, '');
@@ -16,22 +16,21 @@ var main = (function(dependencies) {
     	    	    dep = name;
     	    	    name = NULL;
     	    }
-    	    var deps, definition;
+    	    var definition;
     	    if (typeof dep === 'function') {
     	    	    define = dep;
-    	    	    definition = define(main);
-    	    } else if (dep
-    	 && Array.isArray(dep)) {
-    	    	    definition = define.apply(window, [main].concat(dep.map(retrieveDep)));
+    	    	    definition = define(core);
+    	    } else if (Array.isArray(dep)) {
+    	    	    definition = define.apply(window, [core].concat(dep.map(retrieveDep)));
     	    } else {
-	            definition = define(main,
+	            definition = define(core,
 	       	        retrieveDep(dep));
 	        }
 	       	if (name && definition) {
-	       		   dependencies[name] = definition;
+	       		   modules[name] = definition;
 	       	}
     }
-    return main;
+    return core;
 }());
 
 module.exports = main;
