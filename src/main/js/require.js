@@ -1,36 +1,45 @@
+var Promise = require('../../main/js/Promise'),
+    isPromise = Promise.isPromise,
+    NIL,
+    NULL,
+    RE_PROVIDE = /^provide:/;
 var main = (function(modules) {
 	   modules = {};
-	   var NULL,
-	       window,
-	       RE_PROVIDE = /^provide:/;
 	   function retrieveDep(name) {
 	   	    if (!modules[name]) { throw 'No module "' + dep + '" provided'; }
 	   	    return modules[name];
 	   }
-    function core(name, dep, define) {
+	   function core(name, deps, define) {
+	   	    var definition = define.apply(NIL, deps);
+	   	    if (name && definition) {
+	       		   modules[name] = definition;
+	       	}
+	   }
+    function execute(name,dep,define) {
     	    if (RE_PROVIDE.test(name)) {
     	     	   name = name
     	     	        .replace(RE_PROVIDE, '');
     	    } else {
+    	    	    // this case represents a simple use
+    	    	    // not a definition
+    	    	    // => do not support promises
     	    	    define = dep;
     	    	    dep = name;
     	    	    name = NULL;
     	    }
     	    var definition;
-    	    if (typeof dep === 'function') {
+    	    if (typeof dep === 'function' || name && isPromise(dep)) {
     	    	    define = dep;
-    	    	    definition = define(core);
+    	    	    dep = [execute];
     	    } else if (Array.isArray(dep)) {
-    	    	    definition = define.apply(window, [core].concat(dep.map(retrieveDep)));
+    	    	    dep = [execute].concat(dep.map(retrieveDep));
     	    } else {
-	            definition = define(core,
-	       	        retrieveDep(dep));
+    	    	    dep = [execute, retrieveDep(dep)];
 	        }
-	       	if (name && definition) {
-	       		   modules[name] = definition;
-	       	}
+	        core(name, dep, define);
+	        return execute;
     }
-    return core;
+    return execute;
 }());
 
 module.exports = main;
