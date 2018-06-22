@@ -5,15 +5,11 @@ var Promise = require('../../main/js/Promise'),
 var main = (function(modules) {
 	   modules = {};
 	   function retrieveDep(name) {
-	   	    if (!modules[name]) { throw 'No module "' + dep + '" provided'; }
+	   	    if (!modules[name]) { throw 'No module "' + name + '" provided'; }
 	   	    return modules[name];
 	   }
-	   function handleDefinition(name, deps, define) {
-	   	    var definition = define.apply(NIL, deps);
-	   	    if (name && definition) {
-	       		   modules[name] = definition;
-	       	}
-	   }
+	   var mainPromiseResolver,
+	       mainPromise;
     function execute(name,dep,define) {
     	    if (RE_PROVIDE.test(name)) {
     	     	   name = name.replace(RE_PROVIDE, '');
@@ -27,15 +23,42 @@ var main = (function(modules) {
     	    }
     	    var definition;
     	    if (typeof dep === 'function') {
-    	    	    define = dep;
-    	    	    dep = [execute];
+    	    	   define = dep;
+    	    	   dep = [];
     	    } else if (Array.isArray(dep)) {
-    	    	    dep = [execute].concat(dep.map(retrieveDep));
+    	    	   dep = dep.map(retrieveDep);
     	    } else {
-    	    	    dep = [execute, retrieveDep(dep)];
+    	    	   dep = [retrieveDep(dep)];
 	        }
-	        handleDefinition(name, dep, define);
+	        dep = [mainPromise].concat(dep);
+	        function onDepsReadyExec(deps) {
+	        	   return define.apply(NIL, deps);
+	        }
+	        function onDepsError(err) {
+	            console.log(err);
+	        }
+	        var allDepsReady = Promise.all(dep, 'all_' + name + '_deps');
+	        if (name) {
+	        	   function definitionResolver(fulfill, reject) {
+	        	   	    allDepsReady
+	        	   	        .then(onDepsReadyExec)
+	                    .then(function definitionResolve(definition) {
+	                        console.log('> Defined ' + name);
+	       	                 fulfill(definition);
+	                    })
+	                    .or(reject);
+	        	   	}
+	        	   modules[name] = new Promise(definitionResolver, name + 'Promise');
+	        } else {
+	        	   allDepsReady
+	                .then(onDepsReadyExec)
+	                .or(onDepsError);
+	        }
     }
+    mainPromiseResolver = function mainPromiseResolver(fulfill) {
+    	   fulfill(execute);
+	   };
+	   mainPromise = new Promise(mainPromiseResolver, 'mainDep');
     return execute;
 }());
 
