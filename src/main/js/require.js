@@ -1,11 +1,26 @@
 var Promise = require('../../main/js/Promise'),
-    isPromise = Promise.isPromise,
     NIL,
     RE_PROVIDE = /^provide:/;
-var main = (function(modules) {
+function defaultRemoteLoad(name) {
+	   throw 'No module "' + name + '" provided';
+}
+var main = (function(remoteLoad, modules, downloads) {
 	   modules = {};
+	   downloads = {};
+	   function onDepsError(err) {
+	       console.log('dependency error: ' + err);
+	       return Promise.reject(err);
+	   }
 	   function retrieveDep(name) {
-	   	    if (!modules[name]) { throw 'No module "' + name + '" provided'; }
+	   	    if (!modules[name]) {
+	   	    	   if (!downloads[name]) {
+	   	    	   	    downloads[name] = Promise.resolve(remoteLoad(name));
+	   	    	   	}
+	   	    	   return downloads[name]
+	   	    	      .then(function afterDL() {
+	   	    	      	    return modules[name];
+	   	    	      	}).or(onDepsError);
+	   	    }
 	   	    return modules[name];
 	   }
 	   var mainPromiseResolver,
@@ -16,7 +31,6 @@ var main = (function(modules) {
     	    } else {
     	    	    // this case represents a simple use
     	    	    // not a definition
-    	    	    // => do not support promises
     	    	    define = dep;
     	    	    dep = name;
     	    	    name = NIL;
@@ -32,24 +46,25 @@ var main = (function(modules) {
 	        }
 	        dep = [mainPromise].concat(dep);
 	        function onDepsReadyExec(deps) {
+	        	   //console.log('after resolved ' + deps.length + ' deps' + (name? ' [' + name + ']': ''));
 	        	   return define.apply(NIL, deps);
 	        }
-	        function onDepsError(err) {
-	            console.log(err);
-	        }
 	        var allDepsReady = Promise.all(dep, 'all_' + name + '_deps');
+	        //console.log('deps resolver promise : ' + allDepsReady.name);
 	        if (name) {
+	        	   //console.log('providing ' + name + '... ' + dep.length + ' deps');
 	        	   function definitionResolver(fulfill, reject) {
 	        	   	    allDepsReady
 	        	   	        .then(onDepsReadyExec)
 	                    .then(function definitionResolve(definition) {
-	                        console.log('> Defined ' + name);
+	                        //console.log('> Defined ' + name);
 	       	                 fulfill(definition);
 	                    })
 	                    .or(reject);
 	        	   	}
 	        	   modules[name] = new Promise(definitionResolver, name + 'Promise');
 	        } else {
+	        	   //console.log('simple execution... ' + dep.length + ' deps');
 	        	   allDepsReady
 	                .then(onDepsReadyExec)
 	                .or(onDepsError);
@@ -59,6 +74,11 @@ var main = (function(modules) {
     	   fulfill(execute);
 	   };
 	   mainPromise = new Promise(mainPromiseResolver, 'mainDep');
+	   execute.setRemoteLoader = function setRemoteLoader(rl) {
+	   	    remoteLoad = rl;
+	   	};
     return execute;
-}());
-module.exports = main;
+}(defaultRemoteLoad));
+if (module) {
+    module.exports = main;
+}
