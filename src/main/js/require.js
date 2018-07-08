@@ -61,5 +61,4 @@ var main = (function(modules) {
 	   mainPromise = new Promise(mainPromiseResolver, 'mainDep');
     return execute;
 }());
-
 module.exports = main;
