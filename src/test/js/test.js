@@ -40,8 +40,8 @@ function assertEquals(
            '"'+actual+'"': actual;
        fail(name, 
           (msg? ''+msg: '')
-          +' [[expect = <'
-          +expect+'> AND got = <'
+          +' [[expect <'
+          +expect+'> AND got <'
           +actual+'>]]'
        );
    } else if (GLOBAL_DBG || debug) {
