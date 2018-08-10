@@ -163,16 +163,12 @@ self.name = name;
 
   // classic callback manage~t (ok & fail)
   self.done = function done(onDone, onFail) {
-  	   //console.log('done(): creating handler [ onDone=' + onDone.name+ ' ; onFail=' +onFail.name+ ' ] state = '+state);
-     try{
-     	 // ensure we are always asynchronous
-       setTimeout(handle.bind(NIL, {
-         onDone: getFunction(onDone),
-         onFail: getFunction(onFail)
-       }), 1);
-     } catch (e) {
-         console.log('error '+e) ;
-     } 
+      //console.log('done(): creating handler [ onDone=' + onDone.name+ ' ; onFail=' +onFail.name+ ' ] state = '+state);
+      // ensure we are always asynchronous
+      setTimeout(handle.bind(NIL, {
+          onDone: getFunction(onDone),
+          onFail: getFunction(onFail)
+      }), 1);
   };
 
   // Proprietary fork impl
