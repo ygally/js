@@ -51,7 +51,11 @@ function main(name, dep, define, fail) {
 	   dep = [mainPromise].concat(dep);
 	   function onDepsReadyExec(deps) {
 	       //console.log('after resolved ' + deps.length + ' deps' + (name? ' [' + name + ']': ''));
-	       return define.apply(NIL, deps);
+	       try{
+	       	    return define.apply(NIL, deps);
+	       	} catch(e) {
+	       		   console.error('Error while defining/executing module ' + (name? '"' + name + '" ': ''), e);
+	       	}
 	   }
 	   var allDepsReady = Promise.all(dep, 'all_' + name + '_deps');
 	   //console.log('deps resolver promise : ' + allDepsReady.name);
