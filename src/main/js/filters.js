@@ -1,6 +1,7 @@
 /*
 	 FIXME 001 : allow multiple instances
 	 FIXME 002 : allow more than 1 init call
+	 FIXME 003 : add range filters (times, prices, and other numerical values)
 */
 var yareq = require('../../main/js/require');
 
