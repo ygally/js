@@ -51,7 +51,29 @@ yatest('based on value filters', function(a) {
         a.equals(filters.valuesOf('category').sort().join(";"), "Himalayen;Mau égyptien;Siamois");
         a.equals(filters.valuesOf('age').sort(numerically).join(";"), '2;4;12');
         a.equals(filters.indexesFor('category:Siamois').join("_"), "2");
-        a.equals(filters.objectsFor('category:Mau égyptien').map(o=>o.name).join("_"), "Cuttie_Alex");
+        a.equals(filters.objectsFor('category:Mau égyptien').map(o=>o.name).sort().join("_"), "Alex_Cuttie");
+    	   a.end();
+    });
+});
+
+yatest('standalone filters', function(a) {
+    yareq(['filters'], function standaloneFilters(core, filterLib) {
+        filters = filterLib.newInstance();
+        filters.byProperty('type');
+        filters.byProperty('faces');
+        var shapes = [
+            {name: 'square', type: '2D', sides: 4, faces: 1},
+            {name: 'triangle', type: '2D', sides: 3, faces: 1},
+            {name: 'pyramide', type: '3D', sides: 8, faces: 5},
+            {name: 'prism', type: '3D', sides: 9, faces: 5},
+            {name: 'cube', type: '3D', sides: 12, faces: 6}
+        ];
+        filters.initWith(shapes);
+        var expectedNames = 'faces:1;faces:5;faces:6';
+        expectedNames += ';type:2D;type:3D';
+        a.equals(filters.names().sort().join(";"), expectedNames);
+        a.equals(filterLib.managers().sort().join(";").substring(0,15), "main;manager-1-");
+        a.equals(filters.objectsFor('type:2D').map(o=>o.name).sort().join("_"), "square_triangle");
     	   a.end();
     });
 });

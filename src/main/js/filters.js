@@ -1,18 +1,19 @@
 /*
-	 FIXME 001 : allow multiple instances
 	 FIXME 002 : allow more than 1 init call
 	 FIXME 003 : add range filters (times, prices, and other numerical values)
 */
 var yareq = require('../../main/js/require');
 
-yareq(
-	   'provide:filters',
-	   function filtersDefinition(core) {
+yareq('provide:filters', function filtersDefinition(core) {
+	   	var managers = [],
+	   	    managerMap = {};
+	   function addManager(name) {
 	   	    var filters,
 	   	        filterMap,
 	   	        groups,
 	   	        groupMap,
 	   	        originals;
+	   	    name = name || 'manager-' + managers.length + '-' + (+new Date);
 	   	    function resetAll() {
 	   	        filters = [];
 	   	        filterMap = {};
@@ -124,7 +125,8 @@ yareq(
 	       	function objectsFor(f) {
 	       	    return originalsFrom(indexesFor(f));
 	       	}
-	       return {
+	       var manager = {
+	       	    "name": name,
 	       	    "reset": resetAll,
 	       	    "create": create,
 	       	    "names": names,
@@ -134,4 +136,14 @@ yareq(
 	       	    "indexesFor": indexesFor,
 	       	    "objectsFor": objectsFor
 	       	};
-	   });
+	       	managers.push(manager);
+	       	managerMap[name] = manager;
+	       	return manager;
+	   }
+	   var mainInstance = addManager('main');
+	   mainInstance["newInstance"] = addManager;
+	   mainInstance["managers"] = function managerNames() {
+	       return Object.keys(managerMap);
+	   };
+	   return mainInstance;
+});
