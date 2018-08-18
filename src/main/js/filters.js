@@ -1,8 +1,15 @@
 /*
-	 FIXME 002 : allow more than 1 init call
 	 FIXME 003 : add range filters (times, prices, and other numerical values)
 */
 var yareq = require('../../main/js/require');
+
+function from(array) {
+    return {
+        "remove": function removeFromArray(e) {
+            array.splice(array.indexOf(e), 1);
+        }
+    };
+}
 
 yareq('provide:filters', function filtersDefinition(core) {
 	   	var managers = [],
@@ -27,6 +34,16 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       }
 	       function resetOneGroup(g) {
 	   	        g.values = [];
+	   	        names(g.prefix).forEach(removeFilter);
+	   	        //console.log('removed filters from group', g.prefix);
+	       }
+	       function removeFilter(name) {
+	       	    if (!filterMap.hasOwnProperty(name)) {
+	       	        throw 'Unknown filter ' + name;
+	       	    }
+	       	    from(filters).remove(filterMap[name]);
+	       	    delete filterMap[name];
+	       	    //console.log('removed filter', name);
 	       }
 	       function originalFromIndex(i) {
             return originals[i];
@@ -129,6 +146,7 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	    "name": name,
 	       	    "reset": resetAll,
 	       	    "create": create,
+	       	    "remove": removeFilter,
 	       	    "names": names,
 	       	    "byProperty": createByProperty,
 	       	    "initWith": initWith,

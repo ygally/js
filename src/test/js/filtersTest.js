@@ -62,11 +62,11 @@ yatest('standalone filters', function(a) {
         filters.byProperty('type');
         filters.byProperty('faces');
         var shapes = [
-            {name: 'square', type: '2D', sides: 4, faces: 1},
-            {name: 'triangle', type: '2D', sides: 3, faces: 1},
-            {name: 'pyramide', type: '3D', sides: 8, faces: 5},
-            {name: 'prism', type: '3D', sides: 9, faces: 5},
-            {name: 'cube', type: '3D', sides: 12, faces: 6}
+            {name: 'square', type: '2D', faces: 1},
+            {name: 'triangle', type: '2D', faces: 1},
+            {name: 'pyramide', type: '3D', faces: 5},
+            {name: 'prism', type: '3D', faces: 5},
+            {name: 'cube', type: '3D', faces: 6}
         ];
         filters.initWith(shapes);
         var expectedNames = 'faces:1;faces:5;faces:6';
@@ -74,6 +74,27 @@ yatest('standalone filters', function(a) {
         a.equals(filters.names().sort().join(";"), expectedNames);
         a.equals(filterLib.managers().sort().join(";").substring(0,15), "main;manager-1-");
         a.equals(filters.objectsFor('type:2D').map(o=>o.name).sort().join("_"), "square_triangle");
+    	   a.end();
+    });
+});
+
+yatest('multiple init filters', function(a) {
+    yareq(['filters'], function standaloneFilters(core, filterLib) {
+        filters = filterLib.newInstance();
+        filters.create('E', o => o.name.charAt(0) == 'e');
+        filters.byProperty('color');
+        var coins = [
+            {name: 'c10', color: 'red'},
+            {name: 'c20', color: 'red'},
+            {name: 'c50', color: 'red'}
+        ];
+        filters.initWith(coins);
+        a.equals(filters.names().sort().join(";"), 'E;color:red');
+        coins.push(
+            {name: 'e1', color: 'grey'},
+            {name: 'e2', color: 'grey'});
+        filters.initWith(coins);
+        a.equals(filters.names().sort().join(";"), 'E;color:grey;color:red');
     	   a.end();
     });
 });
