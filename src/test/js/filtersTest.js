@@ -29,8 +29,8 @@ yatest('simple filters', function(a) {
 });
 
 yatest('based on value filters', function(a) {
-    yareq(['filters'], function valueFilters(core, filters) {
-        filters.reset();
+    yareq(['filters'], function valueFilters(core, filterLib) {
+        filters = filterLib.newInstance();
         filters.byProperty('category');
         filters.byProperty('age', 'years');
         filters.byProperty('cute', o => o.isCute && o.isCute() || !1);

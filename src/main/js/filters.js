@@ -3,17 +3,20 @@
 */
 var yareq = require('../../main/js/require');
 
-function from(array) {
-    return {
-        "remove": function removeFromArray(e) {
-            array.splice(array.indexOf(e), 1);
-        }
-    };
+function removeFrom(array, e) {
+    array.splice(array.indexOf(e), 1);
+}
+function matches(prefix, text) {
+    return prefix.test(text);
+} 
+function extractNameOf(object) {
+    return object.name;
 }
 
 yareq('provide:filters', function filtersDefinition(core) {
 	   	var managers = [],
-	   	    managerMap = {};
+	   	    managerMap = {},
+	   	    NIL;
 	   function addManager(name) {
 	   	    var filters,
 	   	        filterMap,
@@ -21,29 +24,32 @@ yareq('provide:filters', function filtersDefinition(core) {
 	   	        groupMap,
 	   	        originals;
 	   	    name = name || 'manager-' + managers.length + '-' + (+new Date);
-	   	    function resetAll() {
+	   	    function initialize() {
 	   	        filters = [];
 	   	        filterMap = {};
 	   	        groups = [];
 	   	        groupMap = {};
 	   	        originals = [];
 	   	    }
-	   	    resetAll();
 	   	    function resetOne(filtr) {
 	   	        filtr.index = [];
+	       }
+	       function names(prefix) {
+	       	    var list = filters.map(extractNameOf);
+	       	    if (!prefix) { return list; }
+	       	    prefix = new RegExp('^' + prefix + ':');
+	       	    return list.filter(matches.bind(NIL, prefix));
+	       	}
+	       function removeFilter(name) {
+	       	    if (!filterMap.hasOwnProperty(name)) {
+	       	        throw 'removeFilter(): unknown filter ' + name;
+	       	    }
+	       	    removeFrom(filters, filterMap[name]);
+	       	    delete filterMap[name];
 	       }
 	       function resetOneGroup(g) {
 	   	        g.values = [];
 	   	        names(g.prefix).forEach(removeFilter);
-	   	        //console.log('removed filters from group', g.prefix);
-	       }
-	       function removeFilter(name) {
-	       	    if (!filterMap.hasOwnProperty(name)) {
-	       	        throw 'Unknown filter ' + name;
-	       	    }
-	       	    from(filters).remove(filterMap[name]);
-	       	    delete filterMap[name];
-	       	    //console.log('removed filter', name);
 	       }
 	       function originalFromIndex(i) {
             return originals[i];
@@ -65,7 +71,6 @@ yareq('provide:filters', function filtersDefinition(core) {
             };
             filters.push(f);
             filterMap[name] = f;
-            //console.log('created filter', f.name);
 	       }
 	       function isFunction(f) {
             return typeof f === 'function';
@@ -92,7 +97,6 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	    };
 	       	    groups.push(fGroup);
             groupMap[prefix] = fGroup;
-            //console.log('created filter group ' + fGroup.prefix + ':...');
 	       	}
 	       function createGroupFiltersFrom(obj) {
 	       	    function createIfNewForGroup(g) {
@@ -121,16 +125,6 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	    filters.forEach(resetOne);
 	       	    originals.forEach(createIndexes);
 	       	}
-	       	function names(prefix) {
-	       	    var list = [];
-	       	    prefix = prefix && new RegExp('^' + prefix + ':');
-	       	    filters.forEach(function getNameOf(f) {
-	       	        if (!prefix || prefix.test(f.name)) {
-	       	            list.push(f.name);
-	       	        }
-	       	    });
-	       	    return list;
-	       	}
 	       	function valuesOf(fGroup) {
 	       	    fGroup = fGroup && groupMap[fGroup];
 	       	    return fGroup && fGroup.values;
@@ -144,7 +138,7 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	}
 	       var manager = {
 	       	    "name": name,
-	       	    "reset": resetAll,
+	       	    "reset": initialize,
 	       	    "create": create,
 	       	    "remove": removeFilter,
 	       	    "names": names,
@@ -156,6 +150,7 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	};
 	       	managers.push(manager);
 	       	managerMap[name] = manager;
+	       	initialize();
 	       	return manager;
 	   }
 	   var mainInstance = addManager('main');
