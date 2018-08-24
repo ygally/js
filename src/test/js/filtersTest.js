@@ -11,7 +11,6 @@ yatest('simple filters', function(a) {
     yareq(
         ['filters'],
         function simpleFilters(core, filters) {
-            filters.reset();
             filters.create('matchA', o => o.name.indexOf('a') >= 0);
             filters.create('matchE', o => o.name.indexOf('e') >= 0);
             filters.create('matchR', o => o.name.indexOf('r') >= 0);

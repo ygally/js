@@ -1,5 +1,6 @@
 /*
 	 FIXME 003 : add range filters (times, prices, and other numerical values)
+	 FIXME 004 : add support for intersection and union of filters index (for filters combinations)
 */
 var yareq = require('../../main/js/require');
 
@@ -18,19 +19,12 @@ yareq('provide:filters', function filtersDefinition(core) {
 	   	    managerMap = {},
 	   	    NIL;
 	   function addManager(name) {
-	   	    var filters,
-	   	        filterMap,
-	   	        groups,
-	   	        groupMap,
-	   	        originals;
-	   	    name = name || 'manager-' + managers.length + '-' + (+new Date);
-	   	    function initialize() {
-	   	        filters = [];
-	   	        filterMap = {};
-	   	        groups = [];
-	   	        groupMap = {};
+	   	    var filters = [],
+	   	        filterMap = {},
+	   	        groups = [],
+	   	        groupMap = {},
 	   	        originals = [];
-	   	    }
+	   	    name = name || 'manager-' + managers.length + '-' + (+new Date);
 	   	    function resetOne(filtr) {
 	   	        filtr.index = [];
 	       }
@@ -138,7 +132,6 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	}
 	       var manager = {
 	       	    "name": name,
-	       	    "reset": initialize,
 	       	    "create": create,
 	       	    "remove": removeFilter,
 	       	    "names": names,
@@ -150,7 +143,6 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	};
 	       	managers.push(manager);
 	       	managerMap[name] = manager;
-	       	initialize();
 	       	return manager;
 	   }
 	   var mainInstance = addManager('main');
