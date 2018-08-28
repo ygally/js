@@ -1,5 +1,4 @@
 /*
-	 FIXME 003 : add range filters (times, prices, and other numerical values)
 	 FIXME 004 : add support for intersection and union of filters index (for filters combinations)
 */
 var yareq = require('../../main/js/require');
@@ -23,13 +22,123 @@ yareq('provide:filters', function filtersDefinition(core) {
 	   	        filterMap = {},
 	   	        groups = [],
 	   	        groupMap = {},
-	   	        originals = [];
+	   	        originals = [],
+	   	        ranges = [],
+	   	        rangeMap = {};
 	   	    name = name || 'manager-' + managers.length + '-' + (+new Date);
-	   	    function resetOne(filtr) {
+	   	    function originalFromIndex(i) {
+            return originals[i];
+        }
+        function originalsFrom(indexArray) {
+            return indexArray && indexArray.map(originalFromIndex);
+        }
+        function before(fRange, value) {
+            // FIXME use dichotomy! 
+            var i,
+                orig,
+                index = fRange.index,
+                getValue = fRange.getValue,
+                accepted = [];
+            for (i=0; i<index.length; ++i) {
+                orig = originalFromIndex(index[i]);
+                orig = getValue(orig);
+                if (orig < value) {
+                    accepted.push(index[i]);
+                }
+            }
+            return accepted;
+        }
+        function after(fRange, value) {
+            // FIXME use dichotomy! 
+            var i,
+                orig,
+                index = fRange.index,
+                getValue = fRange.getValue,
+                accepted = [];
+            for (i=0; i<index.length; ++i) {
+                orig = originalFromIndex(index[i]);
+                orig = getValue(orig);
+                if (orig > value) {
+                    accepted.push(index[i]);
+                }
+            }
+            return accepted;
+        }
+	       function max(fRange, value) {
+            // FIXME use dichotomy! 
+            var i,
+                orig,
+                index = fRange.index,
+                getValue = fRange.getValue,
+                accepted = [];
+            for (i=0; i<index.length; ++i) {
+                orig = originalFromIndex(index[i]);
+                orig = getValue(orig);
+                if (orig <= value) {
+                    accepted.push(index[i]);
+                }
+            }
+            return accepted;
+        }
+        function min(fRange, value) {
+            // FIXME use dichotomy! 
+            var i,
+                orig,
+                index = fRange.index,
+                getValue = fRange.getValue,
+                accepted = [];
+            for (i=0; i<index.length; ++i) {
+                orig = originalFromIndex(index[i]);
+                orig = getValue(orig);
+                if (orig >= value) {
+                    accepted.push(index[i]);
+                }
+            }
+            return accepted;
+        }
+        function between(fRange, v1, v2) {
+            // FIXME use dichotomy! 
+            var i,
+                orig,
+                index = fRange.index,
+                getValue = fRange.getValue,
+                accepted = [];
+            for (i=0; i<index.length; ++i) {
+                orig = originalFromIndex(index[i]);
+                orig = getValue(orig);
+                if (orig >= v1 && (v2 === NIL || orig <= v2)) {
+                    accepted.push(index[i]);
+                }
+            }
+            if (v2 === NIL) {
+                accepted.and = function and(out_v2) {
+                    var finalAccepted = [];
+                    for (i=0; i<accepted.length; ++i) {
+                        orig = originalFromIndex(accepted[i]);
+                        orig = getValue(orig);
+                        if (orig <= out_v2) {
+                            finalAccepted.push(accepted[i]);
+                        }
+                    }
+                    return finalAccepted;
+                };
+            }
+            return accepted;
+        }
+	       function resetOne(filtr) {
 	   	        filtr.index = [];
+	       }
+	       function resetOneRange(fRange) {
+	           fRange.index = [];
+	           fRange.index.before = before.bind(NIL, fRange);
+	           fRange.index.after = after.bind(NIL, fRange);
+	           fRange.index.min = min.bind(NIL, fRange);
+	           fRange.index.max = max.bind(NIL, fRange);
+	           fRange.index.between = between.bind(NIL, fRange);
 	       }
 	       function names(prefix) {
 	       	    var list = filters.map(extractNameOf);
+	       	    list = list.concat(ranges.map(extractNameOf));
 	       	    if (!prefix) { return list; }
 	       	    prefix = new RegExp('^' + prefix + ':');
 	       	    return list.filter(matches.bind(NIL, prefix));
@@ -45,12 +154,11 @@ yareq('provide:filters', function filtersDefinition(core) {
 	   	        g.values = [];
 	   	        names(g.prefix).forEach(removeFilter);
 	       }
-	       function originalFromIndex(i) {
-            return originals[i];
-        }
-        function originalsFrom(indexArray) {
-            return indexArray && indexArray.map(originalFromIndex);
-        }
+	       function resetAll() {
+	           groups.forEach(resetOneGroup);
+	           filters.forEach(resetOne);
+	           ranges.forEach(resetOneRange);
+	       }
 	       function create(name, accept) {
 	       	    if (!name) {
 	       	        throw 'create(): need name for filter';
@@ -66,6 +174,30 @@ yareq('provide:filters', function filtersDefinition(core) {
             filters.push(f);
             filterMap[name] = f;
 	       }
+	       function createRange(name, property) {
+	       	    if (!name) {
+	       	        throw 'createRange(): need name for filter range';
+	       	    }
+	       	    if (rangeMap[name]) {
+	       	        throw 'createRange(): filter range already exists for name "' + name + '"';
+	       	    }
+            property = property || name;
+	       	    var getValue = property;
+	       	    if (!isFunction(getValue)) {
+	       	        //console.log('createRange(): creating property retriever for "' + property + '"');
+	       	    	   getValue = function getValue(o) {
+	       	    	   	    return o[property];
+	       	        };
+	       	    }
+	       	    var fRange = {
+	       	        "name": name,
+	       	        "getValue": getValue,
+	       	        "index": NIL
+	       	    };
+	       	    resetOneRange(fRange);
+            ranges.push(fRange);
+            rangeMap[name] = fRange;
+	       }
 	       function isFunction(f) {
             return typeof f === 'function';
         }
@@ -79,12 +211,12 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	    property = property || prefix;
 	       	    var getValue = property;
 	       	    if (!isFunction(getValue)) {
-	       	        //console.log('creating property retriever for "' + property + '"');
+	       	        //console.log('createByProperty(): creating property retriever for "' + property + '"');
 	       	    	   getValue = function getValue(o) {
 	       	    	   	    return o[property];
 	       	        };
 	       	    }
-	       	    fGroup = {
+	       	    var fGroup = {
 	       	        "prefix": prefix,
 	       	        "getValue": getValue,
 	       	        "values": []
@@ -105,26 +237,45 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	    }
 	       	    groups.forEach(createIfNewForGroup);
 	       	}
-	       function createIndexes(object, i) {
-	       	    filters.forEach(function createIndex(f) {
+	       function createBasicIndexes(object, i) {
+	       	    filters.forEach(function createBasicIndex(f) {
 	       	        if (f.accept(object)) {
 	       	            f.index.push(i);
 	       	        }
 	       	    });
 	       	}
+	       	function createRangeIndexes(object, i) {
+	       	    ranges.forEach(function createRangeIndex(fRange) {
+	       	        fRange.index.push(i);
+	       	    });
+	       	}
+	       	function createIndexes(object, i) {
+	       	    createBasicIndexes(object, i);
+	       	    createRangeIndexes(object, i);
+	       	}
+	       	function sortRange(fRange) {
+	       	    function compare(i1, i2) {
+	       	        i1 = originalFromIndex(i1);
+	       	        i2 = originalFromIndex(i2);
+	       	        i1 = fRange.getValue(i1);
+	       	        i2 = fRange.getValue(i2);
+	       	        return i1<i2? -1: (i1>i2? 1: 0);
+	       	    }
+	       	    fRange.index.sort(compare);
+	       	}
 	       function initWith(objects) {
 	       	    originals = objects;
-	       	    groups.forEach(resetOneGroup);
+	       	    resetAll();
 	       	    originals.forEach(createGroupFiltersFrom);
-	       	    filters.forEach(resetOne);
 	       	    originals.forEach(createIndexes);
+	       	    ranges.forEach(sortRange)
 	       	}
 	       	function valuesOf(fGroup) {
 	       	    fGroup = fGroup && groupMap[fGroup];
 	       	    return fGroup && fGroup.values;
 	       	}
 	       	function indexesFor(f) {
-	       	    f = f && filterMap[f];
+	       	    f = f && (filterMap[f] || rangeMap[f]);
 	       	    return f && f.index;
 	       	}
 	       	function objectsFor(f) {
@@ -136,6 +287,7 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	    "remove": removeFilter,
 	       	    "names": names,
 	       	    "byProperty": createByProperty,
+	       	    "createRange": createRange,
 	       	    "initWith": initWith,
 	       	    "valuesOf": valuesOf,
 	       	    "indexesFor": indexesFor,

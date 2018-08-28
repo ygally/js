@@ -77,7 +77,7 @@ yatest('standalone filters', function(a) {
     });
 });
 
-yatest('multiple init filters', function(a) {
+yatest('init filters multiple times', function(a) {
     yareq(['filters'], function standaloneFilters(core, filterLib) {
         filters = filterLib.newInstance();
         filters.create('E', o => o.name.charAt(0) == 'e');
@@ -94,6 +94,28 @@ yatest('multiple init filters', function(a) {
             {name: 'e2', color: 'grey'});
         filters.initWith(coins);
         a.equals(filters.names().sort().join(";"), 'E;color:grey;color:red');
+    	   a.end();
+    });
+});
+
+yatest('range filters', function(a) {
+    yareq(['filters'], function standaloneFilters(core, filterLib) {
+        filters = filterLib.newInstance();
+        filters.createRange('number', o => +o.name.charAt(1));
+        var coins = [
+            {name: 'c10', color: 'red'},
+            {name: 'c20', color: 'red'},
+            {name: 'c50', color: 'red'}
+        ];
+        filters.initWith(coins);
+        a.equals(filters.names().join(";"), 'number');
+        a.equals(filters.indexesFor('number').join(','), '0,1,2');
+        a.equals(filters.indexesFor('number').before(5).join(','), '0,1');
+        a.equals(filters.indexesFor('number').max(5).join(','), '0,1,2');
+        a.equals(filters.indexesFor('number').after(2).join(','), '2');
+        a.equals(filters.indexesFor('number').min(2).join(','), '1,2');
+        a.equals(filters.indexesFor('number').between(2, 4).join(','), '1');
+        a.equals(filters.indexesFor('number').between(4).and(6).join(','), '2');
     	   a.end();
     });
 });
