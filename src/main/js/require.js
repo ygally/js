@@ -1,4 +1,4 @@
-var Promise = require('../../main/js/Promise'),
+var Promise = require('./Promise'),
     NIL,
     modules = {},
 	   downloads = {},
