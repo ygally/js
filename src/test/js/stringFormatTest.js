@@ -12,12 +12,14 @@ test('no substitution source', a => {
     var msgFmt = 'hello [¤name¤]!';
     a.equals(stringFormat(msgFmt), 'hello !');
 });
+
 test('simple substitution', a => {
     var data = {name:'world'};
     var msgFmt = 'hello [¤name¤]';
     var value = stringFormat(msgFmt, data);
     a.equals(value, 'hello world');
 });
+
 test('namespace substitution', a => {
     var data = {
         mondo: {name:'world'},
@@ -27,6 +29,7 @@ test('namespace substitution', a => {
     var value = stringFormat(msgFmt, data);
     a.equals(value, 'hello world!');
 });
+
 test('str length substitution', a => {
     var data = {
         name: 'Charlie'
@@ -35,6 +38,7 @@ test('str length substitution', a => {
     var value = stringFormat(msgFmt, data);
     a.equals(value, "I'm 7 chars long");
 });
+
 test('undefined handling', a => {
     var data = {
             animal: 'bee',
@@ -49,4 +53,22 @@ test('undefined handling', a => {
     var badExpected = ",big:,wears:,speaks:,teeth:,says:";
     a.equals(stringFormat(goodMsg, data), goodExpected);
     a.equals(stringFormat(badMsg, data), badExpected);
+});
+
+test('mustache format substitution', a => {
+    var mustacheSettings = {tags: ['{{', '}}']};
+    var mustacheFormat = stringFormat.build(mustacheSettings);
+    var MODEL = {name: 'Yaya'};
+    var msgFmt = 'hello {{name}} !';
+    var text = mustacheFormat(msgFmt, MODEL);
+    a.equals(text, 'hello Yaya !');
+});
+
+test('shell format substitution', a => {
+    var shSettings = {tags: ['${', '}']};
+    var shFormat = stringFormat.build(shSettings);
+    var MODEL = {name: 'Yaya'};
+    var msgFmt = 'hello ${name} !';
+    var text = shFormat(msgFmt, MODEL);
+    a.equals(text, 'hello Yaya !');
 });
