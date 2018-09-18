@@ -81,3 +81,18 @@ test("old require compat", a => {
     a.equals(account.siteId, 221, "site id is wrong (int)");
     a.equals(account.source, 1, "source is wrong");
 });
+
+test("render deep complex data", a => {
+	   var dogInfo = contextualize({
+	   	    dog: {
+	   	        name: 'Goofy',
+	   	        size: 'tall',
+	   	        properties: ['long ears', 'brown eyes']
+	   	    }
+	   	}, {smartGetters:1}).translate([
+	   	    {name: 'sizeInfo', text: '{{dog.name}} is {{dog.size}}!'},
+	   	    {name: 'otherInfos', text: '{{dog.properties.0}} & {{dog.properties.1}}'}
+	   	]);
+    a.equals(dogInfo.sizeInfo, "Goofy is tall!");
+    a.equals(dogInfo.otherInfos, "long ears & brown eyes");
+});
