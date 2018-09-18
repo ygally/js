@@ -11,7 +11,10 @@ function capitalize(str) {
     return typeof str != 'string'? str:
         str.charAt(0).toUpperCase() + str.substring(1);
 }
-function objectProperty(o, p) {
+function simpleObjectProperty(o, p) {
+    return o[p];
+}
+function smartObjectProperty(o, p) {
     var getter;
     if (o[p] === undefined && p) {
         // try to find a getter method
@@ -20,11 +23,12 @@ function objectProperty(o, p) {
     return typeof getter == 'function'? getter.call(o): o[p];
 }
 function buildFormatter(settings) {
-    var tags = settings.tags || DEFAULT_TAGS;
-    var tagStart = quote(tags[0]);
-    var keyMatch = '([^' + quote(tags[1].charAt(0)) + ']+)';
-    var tagEnd = quote(tags[1]);
-    var regexDynamicText = new RegExp(tagStart + keyMatch + tagEnd/* FIXME, 'g'*/);
+    var tags = settings.tags || DEFAULT_TAGS,
+        tagStart = quote(tags[0]),
+        keyMatch = '([^' + quote(tags[1].charAt(0)) + ']+)',
+        tagEnd = quote(tags[1]),
+        regexDynamicText = new RegExp(tagStart + keyMatch + tagEnd/* FIXME, 'g'*/),
+        objectProperty = settings.smartGetters? smartObjectProperty: simpleObjectProperty;
     /**
      * Formate le texte donné s'il y a des zones dynamiques
      * à interpréter. S'il n'y en a pas, la fonction retourne

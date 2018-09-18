@@ -72,3 +72,28 @@ test('shell format substitution', a => {
     var text = shFormat(msgFmt, MODEL);
     a.equals(text, 'hello Yaya !');
 });
+
+test('smartGetters opt OFF subst.', a => {
+    var MODEL = {skill1: 'algo', getSkill2: ()=>'js'};
+    var msgFmt = '[¤skill1¤] [¤skill2¤]';
+    var text = stringFormat(msgFmt, MODEL);
+    a.equals(text, 'algo ');
+});
+
+test('smartGetters opt ON subst.', a => {
+    var smartSettings = {smartGetters: true};
+    var sFormat = stringFormat.build(smartSettings);
+    var MODEL = {skill1: 'algo', getSkill2: ()=>'js'};
+    var msgFmt = '[¤skill1¤] AND [¤skill2¤]';
+    var text = sFormat(msgFmt, MODEL);
+    a.equals(text, 'algo AND js');
+});
+
+test('smartGetters opt. do not override real prop', a => {
+    var smartSettings = {smartGetters: true};
+    var sFormat = stringFormat.build(smartSettings);
+    var MODEL = {skill1: 'algo', getSkill1: ()=>'js'};
+    var msgFmt = '[¤skill1¤]';
+    var text = sFormat(msgFmt, MODEL);
+    a.equals(text, 'algo');
+});
