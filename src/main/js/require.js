@@ -49,8 +49,7 @@ function main(name, dep, define, fail) {
     	   dep = [retrieveDep(dep)];
 	   }
 	   dep = [mainPromise].concat(dep);
-	   function onDepsReadyExec(deps) {
-	       //console.log('after resolved ' + deps.length + ' deps' + (name? ' [' + name + ']': ''));
+	   function defineModuleWith(deps) {
 	       try{
 	       	    return define.apply(NIL, deps);
 	       	} catch(e) {
@@ -58,23 +57,19 @@ function main(name, dep, define, fail) {
 	       	}
 	   }
 	   var allDepsReady = Promise.all(dep, 'all_' + name + '_deps');
-	   //console.log('deps resolver promise : ' + allDepsReady.name);
 	   if (name) {
-	       //console.log('providing ' + name + '... ' + dep.length + ' deps');
 	       function definitionResolver(resolve, reject) {
 	        	   allDepsReady
-	        	   	   .then(onDepsReadyExec)
+	        	   	   .then(defineModuleWith)
 	               .then(function definitionResolve(definition) {
-	                   //console.log('> Defined ' + name);
-	       	            resolve(definition);
+	                   resolve(definition);
 	               })
 	               .or(reject);
 	       	}
 	       modules[name] = new Promise(definitionResolver, name + 'Promise');
 	   } else {
-	       //console.log('simple execution... ' + dep.length + ' deps');
 	       allDepsReady
-	           .then(onDepsReadyExec)
+	           .then(defineModuleWith)
 	           .or(createDepErrorHandler(fail));
 	   }
 }

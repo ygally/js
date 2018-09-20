@@ -27,7 +27,7 @@ function emulatedLoad(name) {
 	   	    	   } catch(e) {
 	   	    	   	  reject(e + ' [name=' + name + ']');
 	   	    	   }
-	   	    }, 3000);
+	   	    }, 1000);
 	   	});
 }
 requoya.setRemoteLoader(emulatedLoad);
