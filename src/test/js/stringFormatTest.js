@@ -4,8 +4,8 @@ var test = require('./test');
 
 test('capitalizer', a => {
     a.equals(stringFormat.capitalize('doggyStyle'), 'DoggyStyle');
-    a.equals(typeof stringFormat.capitalize({objTest:'sunny'}), 'object');
     a.equals(stringFormat.capitalize(), undefined);
+    a.equals(typeof stringFormat.capitalize({objTest:'sunny'}), 'object');
 });
 
 test('no substitution source', a => {

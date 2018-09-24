@@ -48,9 +48,8 @@ function assertEquals(
        pass(name);
    }
 }
-
 var tuid = 0;
-var DEFAULT_OPTS = {};
+var DEFAULT_OPTS = {time:true};
 function test(name, opt, process) {
    if (isFunction(name)) {
        process = name;
@@ -63,32 +62,36 @@ function test(name, opt, process) {
    if (opt.skip) {
        return;
    }
-   var n = 0;
+   var n = 0, t0;
+   function tmFromStart() {
+       var now = +new Date();
+       return opt.time? '[' + (now - t0) + ' ms] ': '';
+   }
    var context = {
        pass: function pass(msg){
-          pass(name, msg);
+          pass(tmFromStart() + name, msg);
           context.end();
        },
        equals: function equals(
            actual, expect, msg, debug) {
            assertEquals(
-               name+(n++? '['+n+']':''),
+               tmFromStart() + name+(n++? '['+n+']':''),
                msg,
                expect,
                actual,
                debug);
        },
        fail: function fail(msg){
-          fail(name, msg);
+          fail(tmFromStart() + name, msg);
           context.end();
        },
        // FIXME something to tell test is over
        end: noop
    };
+   t0 = +new Date();
    // call test process
    process(context);
 }
-
 if (module) {
     module.exports = test;
 }
