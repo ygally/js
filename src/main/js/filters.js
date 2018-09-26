@@ -1,8 +1,8 @@
 /*
 	 FIXME 004 : add support for intersection and union of filters index (for filters combinations)
 */
-var yareq = require('../../main/js/require');
-
+var yareq = require('./require'),
+    NIL;
 function removeFrom(array, e) {
     array.splice(array.indexOf(e), 1);
 }
@@ -12,7 +12,39 @@ function matches(prefix, text) {
 function extractNameOf(object) {
     return object.name;
 }
-
+function binarySearch(isMore, data, index, getter, value, start, end) {
+  var cnt = index.length, mid;
+  if (start === NIL) {
+    start = 0;
+    end = cnt-1;
+  }
+  if (end - start < 2) {
+  	  return isMore(getter(data[index[start]]), value)?
+  	      start: 
+  	      isMore(getter(data[index[end]]), value)?
+  	          end:
+  	          cnt;
+  }
+  mid = Math.floor((start + end) / 2);
+  if (isMore(getter(data[index[mid]]), value)) {
+    return Math.min(binarySearch(isMore, data, index, getter, value, start, mid-1), mid);
+  }
+  return binarySearch(isMore, data, index, getter, value, mid+1, end);
+}
+function isStrictlyMore(value, threshold) {
+    return value > threshold;
+}
+function isMoreOrEqual(value, threshold) {
+    return value >= threshold;
+}
+var binarySearchStrict = binarySearch.bind(NIL, isStrictlyMore);
+var binarySearchIncluding = binarySearch.bind(NIL, isMoreOrEqual);
+function lowerThanExtractor(searcher, array, value) {
+    return array.slice(0, searcher(value));
+}
+function greaterThanExtractor(searcher, array, value) {
+    return array.slice(searcher(value));
+}
 yareq('provide:filters', function filtersDefinition(core) {
 	   	var managers = [],
 	   	    managerMap = {},
@@ -32,109 +64,30 @@ yareq('provide:filters', function filtersDefinition(core) {
         function originalsFrom(indexArray) {
             return indexArray && indexArray.map(originalFromIndex);
         }
-        function before(fRange, value) {
-            // FIXME use dichotomy! 
-            var i,
-                orig,
-                index = fRange.index,
-                getValue = fRange.getValue,
-                accepted = [];
-            for (i=0; i<index.length; ++i) {
-                orig = originalFromIndex(index[i]);
-                orig = getValue(orig);
-                if (orig < value) {
-                    accepted.push(index[i]);
-                }
-            }
-            return accepted;
-        }
-        function after(fRange, value) {
-            // FIXME use dichotomy! 
-            var i,
-                orig,
-                index = fRange.index,
-                getValue = fRange.getValue,
-                accepted = [];
-            for (i=0; i<index.length; ++i) {
-                orig = originalFromIndex(index[i]);
-                orig = getValue(orig);
-                if (orig > value) {
-                    accepted.push(index[i]);
-                }
-            }
-            return accepted;
-        }
-	       function max(fRange, value) {
-            // FIXME use dichotomy! 
-            var i,
-                orig,
-                index = fRange.index,
-                getValue = fRange.getValue,
-                accepted = [];
-            for (i=0; i<index.length; ++i) {
-                orig = originalFromIndex(index[i]);
-                orig = getValue(orig);
-                if (orig <= value) {
-                    accepted.push(index[i]);
-                }
-            }
-            return accepted;
-        }
-        function min(fRange, value) {
-            // FIXME use dichotomy! 
-            var i,
-                orig,
-                index = fRange.index,
-                getValue = fRange.getValue,
-                accepted = [];
-            for (i=0; i<index.length; ++i) {
-                orig = originalFromIndex(index[i]);
-                orig = getValue(orig);
-                if (orig >= value) {
-                    accepted.push(index[i]);
-                }
-            }
-            return accepted;
-        }
-        function between(fRange, v1, v2) {
-            // FIXME use dichotomy! 
-            var i,
-                orig,
-                index = fRange.index,
-                getValue = fRange.getValue,
-                accepted = [];
-            for (i=0; i<index.length; ++i) {
-                orig = originalFromIndex(index[i]);
-                orig = getValue(orig);
-                if (orig >= v1 && (v2 === NIL || orig <= v2)) {
-                    accepted.push(index[i]);
-                }
-            }
-            if (v2 === NIL) {
-                accepted.and = function and(out_v2) {
-                    var finalAccepted = [];
-                    for (i=0; i<accepted.length; ++i) {
-                        orig = originalFromIndex(accepted[i]);
-                        orig = getValue(orig);
-                        if (orig <= out_v2) {
-                            finalAccepted.push(accepted[i]);
-                        }
-                    }
-                    return finalAccepted;
-                };
-            }
-            return accepted;
-        }
-	       function resetOne(filtr) {
+        function resetOne(filtr) {
 	   	        filtr.index = [];
 	       }
 	       function resetOneRange(fRange) {
 	           fRange.index = [];
-	           fRange.index.before = before.bind(NIL, fRange);
-	           fRange.index.after = after.bind(NIL, fRange);
-	           fRange.index.min = min.bind(NIL, fRange);
-	           fRange.index.max = max.bind(NIL, fRange);
-	           fRange.index.between = between.bind(NIL, fRange);
+	           var firstIndexOfMore = binarySearchStrict.bind(NIL, originals, fRange.index, fRange.getValue);
+	           var firstIndexOfMoreOrEqual = binarySearchIncluding.bind(NIL, originals, fRange.index, fRange.getValue);
+	           fRange.index.before = lowerThanExtractor.bind(NIL, firstIndexOfMoreOrEqual, fRange.index);
+	           fRange.index.after = greaterThanExtractor.bind(NIL, firstIndexOfMore, fRange.index);
+	           fRange.index.min = greaterThanExtractor.bind(NIL, firstIndexOfMoreOrEqual, fRange.index);
+	           fRange.index.max = lowerThanExtractor.bind(NIL, firstIndexOfMore, fRange.index);
+	           fRange.index.between = function between(first, last) {
+	               return last === NIL?
+	                   {"and": function max(maxValue) {
+	                       return fRange.index.slice(
+	                           firstIndexOfMoreOrEqual(first),
+	                           firstIndexOfMore(last)
+	                       );
+	                   }}:
+	                   fRange.index.slice(
+	                       firstIndexOfMoreOrEqual(first),
+	                       firstIndexOfMore(last)
+	                   );
+	           };
 	       }
 	       function names(prefix) {
 	       	    var list = filters.map(extractNameOf);
@@ -184,8 +137,7 @@ yareq('provide:filters', function filtersDefinition(core) {
             property = property || name;
 	       	    var getValue = property;
 	       	    if (!isFunction(getValue)) {
-	       	        //console.log('createRange(): creating property retriever for "' + property + '"');
-	       	    	   getValue = function getValue(o) {
+	       	        getValue = function getValue(o) {
 	       	    	   	    return o[property];
 	       	        };
 	       	    }
@@ -194,7 +146,6 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	        "getValue": getValue,
 	       	        "index": NIL
 	       	    };
-	       	    resetOneRange(fRange);
             ranges.push(fRange);
             rangeMap[name] = fRange;
 	       }
@@ -211,8 +162,7 @@ yareq('provide:filters', function filtersDefinition(core) {
 	       	    property = property || prefix;
 	       	    var getValue = property;
 	       	    if (!isFunction(getValue)) {
-	       	        //console.log('createByProperty(): creating property retriever for "' + property + '"');
-	       	    	   getValue = function getValue(o) {
+	       	        getValue = function getValue(o) {
 	       	    	   	    return o[property];
 	       	        };
 	       	    }
