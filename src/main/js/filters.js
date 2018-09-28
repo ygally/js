@@ -1,7 +1,7 @@
 /*
 	 FIXME 004 : add support for intersection and union of filters index (for filters combinations)
 */
-var yareq = require('./require'),
+var cage = require('./yacage'),
     NIL;
 function removeFrom(array, e) {
     array.splice(array.indexOf(e), 1);
@@ -45,7 +45,7 @@ function lowerThanExtractor(searcher, array, value) {
 function greaterThanExtractor(searcher, array, value) {
     return array.slice(searcher(value));
 }
-yareq('provide:filters', function filtersDefinition(core) {
+cage('provide:filters', function filtersDefinition(core) {
 	   	var managers = [],
 	   	    managerMap = {},
 	   	    NIL;

@@ -1,11 +1,25 @@
+/**
+ * YaCage - Ya's Packager
+ *
+ * The Cage symbolizes a closed area, a scope.
+ *
+ * ----
+ *
+ * Needs Promise library to work fine.
+ */
 var Promise = require('./Promise'),
     NIL,
     modules = {},
 	   downloads = {},
-    RE_PROVIDE = /^provide:/;
-function load(name) {
+    RE_PROVIDE = /^provide:/,
+    load;
+function defaultLoad(name) {
 	   throw 'No module "' + name + '" provided';
 }
+function setExternalLoad(l) {
+	   load = l;
+}
+load = defaultLoad;
 function createDepErrorHandler(fail) {
 	   return fail? function handleDepError(err) {
 	   	    fail(err);
@@ -25,9 +39,9 @@ function retrieveDep(name) {
 	   }
 	   	return modules[name];
 }
-var mainPromiseResolver,
-    mainPromise;
-function main(name, dep, define, fail) {
+var cagePromiseResolver,
+    cagePromise;
+function cage(name, dep, define, fail) {
     if (RE_PROVIDE.test(name)) {
      	   name = name.replace(RE_PROVIDE, '');
     } else {
@@ -48,7 +62,7 @@ function main(name, dep, define, fail) {
     } else {
     	   dep = [retrieveDep(dep)];
 	   }
-	   dep = [mainPromise].concat(dep);
+	   dep = [cagePromise].concat(dep);
 	   function defineModuleWith(deps) {
 	       try{
 	       	    return define.apply(NIL, deps);
@@ -73,13 +87,11 @@ function main(name, dep, define, fail) {
 	           .or(createDepErrorHandler(fail));
 	   }
 }
-mainPromiseResolver = function mainPromiseResolver(resolve) {
- 	  resolve(main);
+cagePromiseResolver = function cagePromiseResolver(resolve) {
+ 	  resolve(cage);
 };
-mainPromise = new Promise(mainPromiseResolver, 'mainDep');
-main.setExternalLoad = function setExternalLoad(l) {
-	   load = l;
-};
+cagePromise = new Promise(cagePromiseResolver, 'mainDep');
+cage.setExternalLoad = setExternalLoad;
 if (module) {
-    module.exports = main;
+    module.exports = cage;
 }

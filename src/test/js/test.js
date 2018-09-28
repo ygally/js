@@ -68,11 +68,10 @@ function test(name, opt, process) {
        return opt.time? '[' + (now - t0) + ' ms] ': '';
    }
    var context = {
-       pass: function pass(msg){
+       pass: function contextPass(msg){
           pass(tmFromStart() + name, msg);
-          context.end();
        },
-       equals: function equals(
+       equals: function contextEquals(
            actual, expect, msg, debug) {
            assertEquals(
                tmFromStart() + name+(n++? '['+n+']':''),
@@ -81,7 +80,7 @@ function test(name, opt, process) {
                actual,
                debug);
        },
-       fail: function fail(msg){
+       fail: function contextFail(msg){
           fail(tmFromStart() + name, msg);
           context.end();
        },

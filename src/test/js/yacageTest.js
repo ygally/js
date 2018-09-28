@@ -1,11 +1,11 @@
 /*global module */
 var Promise = require('../../main/js/Promise');
-var requoya = require('../../main/js/require');
+var cage = require('../../main/js/yacage');
 var test = require('./test');
 
 EMULATED_REMOTE = {
  	'pawa': function pawa() {
-		   requoya(
+		   cage(
 	       'provide:pawa',
 	       function powerDefine(core) {
 	       	    return function power(a, n) {
@@ -20,7 +20,7 @@ EMULATED_REMOTE = {
 };
 EMULATED_CACHE = {
  	'substract': function substractLoader() {
-		   requoya(
+		   cage(
 	       'provide:substract',
 	       function substractDefine(core) {
 	       	    return function substract(a, b) {
@@ -43,9 +43,9 @@ function emulatedLoad(name) {
 	   	    }, 1000);
 	   	});
 }
-requoya.setExternalLoad(emulatedLoad);
+cage.setExternalLoad(emulatedLoad);
 
-requoya(
+cage(
 	   'provide:adder',
 	   function addDefine(core) {
 	       return function add(a, b) {
@@ -54,7 +54,7 @@ requoya(
     });
 
 test('require adder', function(a) {
-    requoya(
+    cage(
         ['adder'],
         function simpleUse1(core, add) {
             a.equals(add(42, 43), 85, '42+43 => 85');
@@ -63,7 +63,7 @@ test('require adder', function(a) {
 });
 
 test('require subtract', function(a) {
-    requoya(
+    cage(
     	   ['subtract'],
     	   function simpleRemove(core, substrat) {
             a.equals(subtract(8, 3), 5, '8-3 => 5');
@@ -71,7 +71,7 @@ test('require subtract', function(a) {
         });
 });
 
-requoya(
+cage(
 	   'provide:multiplier',
 	   function multDefine(core) {
 	       return function mult(a, b) {
@@ -80,7 +80,7 @@ requoya(
     });
 
 test('require multiplier', function(a) {
-    requoya(
+    cage(
     	   ['multiplier'],
     	   function simpleUse2(core, mult) {
             a.equals(mult(3, 9), 27, '3x9 => 27');
@@ -89,7 +89,7 @@ test('require multiplier', function(a) {
 });
 
 test('require adder&multiplier', function(a) {
-    requoya(
+    cage(
     	   ['adder', 'multiplier'],
     	   function simpleUse3(core, add, mult) {
             a.equals(add(4, 6), 10, '4+6 => 10');
@@ -99,7 +99,7 @@ test('require adder&multiplier', function(a) {
 });
 
 test('require adder&multiplier&divide', function(a) {
-    requoya(
+    cage(
     	   ['adder', 'multiplier', 'divid'],
     	   function simpleUse4() {
     	   	    a.fail();
@@ -109,23 +109,23 @@ test('require adder&multiplier&divide', function(a) {
         });
 });
 
-requoya(
-  	 'provide:calc',
-	   ['adder', 'substract', 'multiplier', 'pawa'],
-	   function calcDefine(core, add, sub, mult, power) {
-	       return {
-	       	    add: add,
-	       	    sub: sub,
-	       	    mult: mult,
-	       	    power: power,
-	       	    sqr: function square(x) {
-	       	    	   return power(x, 2);
-	       	    }
-	       	};
-    });
-
 test('require calc', function(a) {
-    requoya(
+    cage(
+      	 'provide:calc',
+	       ['adder', 'substract', 'multiplier', 'pawa'],
+	       function calcDefine(core, add, sub, mult, power) {
+	           return {
+	           	    add: add,
+	           	    sub: sub,
+	           	    mult: mult,
+	           	    power: power,
+	           	    sqr: function square(x) {
+	           	    	   return power(x, 2);
+	           	    }
+    	       	};
+        });
+    a.pass('started to provide Calc module');
+    cage(
 	       'calc',
 	       function calcUse1(core, calc) {
 	       	    a.equals(calc.add(3, 6), 9, '3 et 6 : 9');

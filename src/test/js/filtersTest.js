@@ -1,34 +1,33 @@
 /*global require */
-var yareq = require('../../main/js/require');
+var cage = require('../../main/js/yacage');
 var yatest = require('./test');
 
 require('../../main/js/filters');
+
 function numerically(a, b) {
     return Math.sign(a-b);
 }
 
 yatest('simple filters', function(a) {
-    yareq(
-        ['filters'],
-        function simpleFilters(core, filters) {
-            filters.create('matchA', o => o.name.indexOf('a') >= 0);
-            filters.create('matchE', o => o.name.indexOf('e') >= 0);
-            filters.create('matchR', o => o.name.indexOf('r') >= 0);
-            var objects = [
-                {name: 'spray'},
-                {name: 'elite'},
-                {name: 'present'}
-            ];
-        	   filters.initWith(objects);
-        	   a.equals(filters.indexesFor('matchA').join("_"), "0");
-        	   a.equals(filters.indexesFor('matchE').join("_"), "1_2");
-        	   a.equals(filters.objectsFor('matchR').map(o=>o.name).join("_"), "spray_present");
-        	   a.end();
-        });
+    cage(['filters'], function simpleFilters(core, filters) {
+        filters.create('matchA', o => o.name.indexOf('a') >= 0);
+        filters.create('matchE', o => o.name.indexOf('e') >= 0);
+        filters.create('matchR', o => o.name.indexOf('r') >= 0);
+        var objects = [
+            {name: 'spray'},
+            {name: 'elite'},
+            {name: 'present'}
+        ];
+    	   filters.initWith(objects);
+        a.equals(filters.indexesFor('matchA').join("_"), "0");
+        a.equals(filters.indexesFor('matchE').join("_"), "1_2");
+        a.equals(filters.objectsFor('matchR').map(o=>o.name).join("_"), "spray_present");
+        a.end();
+    });
 });
 
 yatest('based on value filters', function(a) {
-    yareq(['filters'], function valueFilters(core, filterLib) {
+    cage(['filters'], function valueFilters(core, filterLib) {
         filters = filterLib.newInstance();
         filters.byProperty('category');
         filters.byProperty('age', 'years');
@@ -56,7 +55,7 @@ yatest('based on value filters', function(a) {
 });
 
 yatest('standalone filters', function(a) {
-    yareq(['filters'], function standaloneFilters(core, filterLib) {
+    cage(['filters'], function standaloneFilters(core, filterLib) {
         filters = filterLib.newInstance();
         filters.byProperty('type');
         filters.byProperty('faces');
@@ -78,7 +77,7 @@ yatest('standalone filters', function(a) {
 });
 
 yatest('init filters multiple times', function(a) {
-    yareq(['filters'], function standaloneFilters(core, filterLib) {
+    cage(['filters'], function standaloneFilters(core, filterLib) {
         filters = filterLib.newInstance();
         filters.create('E', o => o.name.charAt(0) == 'e');
         filters.byProperty('color');
@@ -99,7 +98,7 @@ yatest('init filters multiple times', function(a) {
 });
 
 yatest('range filters', function(a) {
-    yareq(['filters'], function standaloneFilters(core, filterLib) {
+    cage(['filters'], function standaloneFilters(core, filterLib) {
         filters = filterLib.newInstance();
         filters.createRange('number', o => +o.name.charAt(1));
         var coins = [
