@@ -103,19 +103,19 @@ yatest('range filters', function(a) {
         filters = filterLib.newInstance();
         filters.createRange('number', o => +o.name.charAt(1));
         var coins = [
-            {name: 'c10', color: 'red'},
             {name: 'c20', color: 'red'},
+            {name: 'c10', color: 'red'},
             {name: 'c50', color: 'red'}
         ];
         filters.initWith(coins);
         a.equals(filters.names().join(";"), 'number');
-        a.equals(filters.indexesFor('number').join(','), '0,1,2');
-        a.equals(filters.indexesFor('number').before(5).join(','), '0,1');
-        a.equals(filters.indexesFor('number').max(5).join(','), '0,1,2');
+        a.equals(filters.indexesFor('number').join(','), '1,0,2');
+        a.equals(filters.indexesFor('number').before(5).join(','), '1,0');
+        a.equals(filters.indexesFor('number').max(5).join(','), '1,0,2');
         a.equals(filters.indexesFor('number').after(2).join(','), '2');
-        a.equals(filters.indexesFor('number').min(2).join(','), '1,2');
-        a.equals(filters.indexesFor('number').between(2, 4).join(','), '1');
-        a.equals(filters.indexesFor('number').between(4).and(6).join(','), '2');
+        a.equals(filters.indexesFor('number').min(2).join(','), '0,2');
+        a.equals(filters.indexesFor('number').between(2, 4).join(','), '0');
+        a.equals(filters.indexesFor('number').between(5).and(6).join(','), '2');
     	   a.end();
     });
 });
