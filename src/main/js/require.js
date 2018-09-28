@@ -3,7 +3,7 @@ var Promise = require('./Promise'),
     modules = {},
 	   downloads = {},
     RE_PROVIDE = /^provide:/;
-function remoteLoad(name) {
+function load(name) {
 	   throw 'No module "' + name + '" provided';
 }
 function createDepErrorHandler(fail) {
@@ -16,7 +16,7 @@ function createDepErrorHandler(fail) {
 function retrieveDep(name) {
 	   if (!modules[name]) {
 	   	    if (!downloads[name]) {
-	   	    	   downloads[name] = Promise.resolve(remoteLoad(name));
+	   	    	   downloads[name] = Promise.resolve(load(name));
 	   	    }
 	   	    return downloads[name]
 	   	    	   .then(function afterDL() {
@@ -77,8 +77,8 @@ mainPromiseResolver = function mainPromiseResolver(resolve) {
  	  resolve(main);
 };
 mainPromise = new Promise(mainPromiseResolver, 'mainDep');
-main.setRemoteLoader = function setRemoteLoader(rl) {
-	   remoteLoad = rl;
+main.setExternalLoad = function setExternalLoad(l) {
+	   load = l;
 };
 if (module) {
     module.exports = main;

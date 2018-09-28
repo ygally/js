@@ -3,7 +3,7 @@ var Promise = require('../../main/js/Promise');
 var requoya = require('../../main/js/require');
 var test = require('./test');
 
-EMULATED_FILES = {
+EMULATED_REMOTE = {
  	'pawa': function pawa() {
 		   requoya(
 	       'provide:pawa',
@@ -18,19 +18,32 @@ EMULATED_FILES = {
         });
   }
 };
-
+EMULATED_CACHE = {
+ 	'substract': function substractLoader() {
+		   requoya(
+	       'provide:substract',
+	       function substractDefine(core) {
+	       	    return function substract(a, b) {
+	           	    return a - b;
+	           };
+        });
+  }
+};
 function emulatedLoad(name) {
+    if (EMULATED_CACHE[name]) {
+        return EMULATED_CACHE[name]();
+    }
 	   return new Promise(function loadPromiseDef(resolve, reject) {
 	   	    setTimeout(function delayedEmulatedFile() {
 	   	    	   try{
-	   	    	   	  resolve(EMULATED_FILES[name]());
+	   	    	   	  resolve(EMULATED_REMOTE[name]());
 	   	    	   } catch(e) {
 	   	    	   	  reject(e + ' [name=' + name + ']');
 	   	    	   }
 	   	    }, 1000);
 	   	});
 }
-requoya.setRemoteLoader(emulatedLoad);
+requoya.setExternalLoad(emulatedLoad);
 
 requoya(
 	   'provide:adder',
@@ -45,6 +58,15 @@ test('require adder', function(a) {
         ['adder'],
         function simpleUse1(core, add) {
             a.equals(add(42, 43), 85, '42+43 => 85');
+            a.end();
+        });
+});
+
+test('require subtract', function(a) {
+    requoya(
+    	   ['subtract'],
+    	   function simpleRemove(core, substrat) {
+            a.equals(subtract(8, 3), 5, '8-3 => 5');
             a.end();
         });
 });
@@ -89,10 +111,11 @@ test('require adder&multiplier&divide', function(a) {
 
 requoya(
   	 'provide:calc',
-	   ['adder', 'multiplier', 'pawa'],
-	   function calcDefine(core, add, mult, power) {
+	   ['adder', 'substract', 'multiplier', 'pawa'],
+	   function calcDefine(core, add, sub, mult, power) {
 	       return {
 	       	    add: add,
+	       	    sub: sub,
 	       	    mult: mult,
 	       	    power: power,
 	       	    sqr: function square(x) {
@@ -106,6 +129,7 @@ test('require calc', function(a) {
 	       'calc',
 	       function calcUse1(core, calc) {
 	       	    a.equals(calc.add(3, 6), 9, '3 et 6 : 9');
+            a.equals(calc.sub(47, 5), 42, '47-5 : 42');
             a.equals(calc.mult(4, 7), 28, '4 x 7 : 28');
             a.equals(calc.power(8, 0), 1, '8 ^ 0 : 1');
             a.equals(calc.power(12, 1), 12, '12 ^ 1 : 12');
