@@ -48,6 +48,7 @@ if (module) {
     module.exports = {
 	       intersection: intersection,
 	       union: union,
-	       isolator: massIsolator
+	       isolator: isolator,
+	       massIsolator: massIsolator
 	   };
 }
