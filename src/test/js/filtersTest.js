@@ -1,6 +1,6 @@
 /*global require */
 var cage = require('../../main/js/yacage');
-var yatest = require('./test');
+var test = require('./test');
 
 require('../../main/js/filters');
 
@@ -8,7 +8,7 @@ function numerically(a, b) {
     return Math.sign(a-b);
 }
 
-yatest('simple filters', function(a) {
+test('simple filters', function(a) {
     cage(['filters'], function simpleFilters(core, filters) {
         filters.create('matchA', o => o.name.indexOf('a') >= 0);
         filters.create('matchE', o => o.name.indexOf('e') >= 0);
@@ -26,7 +26,7 @@ yatest('simple filters', function(a) {
     });
 });
 
-yatest('based on value filters', function(a) {
+test('based on value filters', function(a) {
     cage(['filters'], function valueFilters(core, filterLib) {
         filters = filterLib.newInstance();
         filters.byProperty('category');
@@ -54,7 +54,7 @@ yatest('based on value filters', function(a) {
     });
 });
 
-yatest('standalone filters', function(a) {
+test('standalone filters', function(a) {
     cage(['filters'], function standaloneFilters(core, filterLib) {
         filters = filterLib.newInstance();
         filters.byProperty('type');
@@ -76,7 +76,7 @@ yatest('standalone filters', function(a) {
     });
 });
 
-yatest('init filters multiple times', function(a) {
+test('init filters multiple times', function(a) {
     cage(['filters'], function standaloneFilters(core, filterLib) {
         filters = filterLib.newInstance();
         filters.create('E', o => o.name.charAt(0) == 'e');
@@ -97,7 +97,7 @@ yatest('init filters multiple times', function(a) {
     });
 });
 
-yatest('range filters', function(a) {
+test('range filters', function(a) {
     cage(['filters'], function standaloneFilters(core, filterLib) {
         filters = filterLib.newInstance();
         filters.createRange('number', o => +o.name.charAt(1));
@@ -114,7 +114,7 @@ yatest('range filters', function(a) {
         a.equals(filters.indexesFor('number').after(2).join(','), '2');
         a.equals(filters.indexesFor('number').min(2).join(','), '0,2');
         a.equals(filters.indexesFor('number').between(2, 4).join(','), '0');
-        a.equals(filters.indexesFor('number').between(5).and(6).join(','), '2');
+        a.equals(filters.indexesFor('number').between(1).and(3).join(','), '1,0');
     	   a.end();
     });
 });

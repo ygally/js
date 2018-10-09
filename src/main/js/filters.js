@@ -1,7 +1,13 @@
+/*global module*/
 /*
 	 FIXME 004 : add support for intersection and union of filters index (for filters combinations)
 */
-var cage = require('./yacage'),
+var cage = module.require('./yacage'),
+    arrays = module.require('./arrays'),
+    sorts = module.require('./sorts'),
+    getter = arrays.getter,
+    massIsolator = arrays.massIsolator,
+    comparator = sorts.comparator,
     NIL;
 function removeFrom(array, e) {
     array.splice(array.indexOf(e), 1);
@@ -12,24 +18,24 @@ function matches(prefix, text) {
 function extractNameOf(object) {
     return object.name;
 }
-function binarySearch(isMore, data, index, getter, value, start, end) {
-  var cnt = index.length, mid;
+function binarySearch(isMore, data, key, value, start, end) {
+  var cnt = data.length, mid;
   if (start === NIL) {
     start = 0;
     end = cnt-1;
   }
   if (end - start < 2) {
-  	  return isMore(getter(data[index[start]]), value)?
+  	  return isMore(data[start][key], value)?
   	      start: 
-  	      isMore(getter(data[index[end]]), value)?
+  	      isMore(data[end][key], value)?
   	          end:
   	          cnt;
   }
   mid = Math.floor((start + end) / 2);
-  if (isMore(getter(data[index[mid]]), value)) {
-    return Math.min(binarySearch(isMore, data, index, getter, value, start, mid-1), mid);
+  if (isMore(data[mid][key], value)) {
+    return Math.min(binarySearch(isMore, data, key, value, start, mid-1), mid);
   }
-  return binarySearch(isMore, data, index, getter, value, mid+1, end);
+  return binarySearch(isMore, data, key, value, mid+1, end);
 }
 function isStrictlyMore(value, threshold) {
     return value > threshold;
@@ -37,8 +43,8 @@ function isStrictlyMore(value, threshold) {
 function isMoreOrEqual(value, threshold) {
     return value >= threshold;
 }
-var binarySearchStrict = binarySearch.bind(NIL, isStrictlyMore);
-var binarySearchIncluding = binarySearch.bind(NIL, isMoreOrEqual);
+binarySearch.strict = binarySearch.bind(NIL, isStrictlyMore);
+binarySearch.including = binarySearch.bind(NIL, isMoreOrEqual);
 function lowerThanExtractor(searcher, array, value) {
     return array.slice(0, searcher(value));
 }
@@ -67,28 +73,6 @@ cage('provide:filters', function filtersDefinition(core) {
         function resetOne(filtr) {
 	   	        filtr.index = [];
 	       }
-	       function resetOneRange(fRange) {
-	           fRange.index = [];
-	           var firstIndexOfMore = binarySearchStrict.bind(NIL, originals, fRange.index, fRange.getValue);
-	           var firstIndexOfMoreOrEqual = binarySearchIncluding.bind(NIL, originals, fRange.index, fRange.getValue);
-	           fRange.index.before = lowerThanExtractor.bind(NIL, firstIndexOfMoreOrEqual, fRange.index);
-	           fRange.index.after = greaterThanExtractor.bind(NIL, firstIndexOfMore, fRange.index);
-	           fRange.index.min = greaterThanExtractor.bind(NIL, firstIndexOfMoreOrEqual, fRange.index);
-	           fRange.index.max = lowerThanExtractor.bind(NIL, firstIndexOfMore, fRange.index);
-	           fRange.index.between = function between(first, last) {
-	               return last === NIL?
-	                   {"and": function max(maxValue) {
-	                       return fRange.index.slice(
-	                           firstIndexOfMoreOrEqual(first),
-	                           firstIndexOfMore(last)
-	                       );
-	                   }}:
-	                   fRange.index.slice(
-	                       firstIndexOfMoreOrEqual(first),
-	                       firstIndexOfMore(last)
-	                   );
-	           };
-	       }
 	       function names(prefix) {
 	       	    var list = filters.map(extractNameOf);
 	       	    list = list.concat(ranges.map(extractNameOf));
@@ -110,7 +94,6 @@ cage('provide:filters', function filtersDefinition(core) {
 	       function resetAll() {
 	           groups.forEach(resetOneGroup);
 	           filters.forEach(resetOne);
-	           ranges.forEach(resetOneRange);
 	       }
 	       function create(name, accept) {
 	       	    if (!name) {
@@ -144,7 +127,8 @@ cage('provide:filters', function filtersDefinition(core) {
 	       	    var fRange = {
 	       	        "name": name,
 	       	        "getValue": getValue,
-	       	        "index": NIL
+	       	        "index": NIL,
+	       	        "isolated": NIL
 	       	    };
             ranges.push(fRange);
             rangeMap[name] = fRange;
@@ -187,38 +171,53 @@ cage('provide:filters', function filtersDefinition(core) {
 	       	    }
 	       	    groups.forEach(createIfNewForGroup);
 	       	}
-	       function createBasicIndexes(object, i) {
+	       function createIndexes(object, i) {
 	       	    filters.forEach(function createBasicIndex(f) {
 	       	        if (f.accept(object)) {
 	       	            f.index.push(i);
 	       	        }
 	       	    });
 	       	}
-	       	function createRangeIndexes(object, i) {
-	       	    ranges.forEach(function createRangeIndex(fRange) {
-	       	        fRange.index.push(i);
-	       	    });
+	       	function initRange(isolateFromOriginals, fRange) {
+	       	    fRange.isolated = isolateFromOriginals(fRange.name, fRange.getValue);
+	       	    fRange.isolated.sort(comparator.by(fRange.name));
+	       	    fRange.index = fRange.isolated.map(getter.of('i'));
+	       	    var indexOfMore = binarySearch.strict.bind(NIL, fRange.isolated, fRange.name);
+	           var indexOfMoreOrEqual = binarySearch.including.bind(NIL, fRange.isolated, fRange.name);
+	           fRange.index.before = lowerThanExtractor.bind(NIL, indexOfMoreOrEqual, fRange.index);
+	           fRange.index.after = greaterThanExtractor.bind(NIL, indexOfMore, fRange.index);
+	           fRange.index.min = greaterThanExtractor.bind(NIL, indexOfMoreOrEqual, fRange.index);
+	           fRange.index.max = lowerThanExtractor.bind(NIL, indexOfMore, fRange.index);
+	           function betweenBounds(data, first, last) {
+	           	    data.slice(
+	                   indexOfMoreOrEqual(first),
+	                   indexOfMore(last)
+	               );
+	           	}
+	           fRange.index.between = function between(first, last) {
+	               return last === NIL?
+	                   {"and": function and(maxValue) {
+	                       return fRange.index.slice(
+	                           indexOfMoreOrEqual(first),
+	                           indexOfMore(maxValue)
+	                       );
+	                   }}:
+	                   fRange.index.slice(
+	                       indexOfMoreOrEqual(first),
+	                       indexOfMore(last)
+	                   );
+	           };
 	       	}
-	       	function createIndexes(object, i) {
-	       	    createBasicIndexes(object, i);
-	       	    createRangeIndexes(object, i);
-	       	}
-	       	function sortRange(fRange) {
-	       	    function compare(i1, i2) {
-	       	        i1 = originalFromIndex(i1);
-	       	        i2 = originalFromIndex(i2);
-	       	        i1 = fRange.getValue(i1);
-	       	        i2 = fRange.getValue(i2);
-	       	        return i1<i2? -1: (i1>i2? 1: 0);
-	       	    }
-	       	    fRange.index.sort(compare);
-	       	}
+	       	initRange.from = function initRangeFrom(propertyIsolator) {
+	       	    return initRange.bind(NIL, propertyIsolator);
+	       	};
 	       function initWith(objects) {
 	       	    originals = objects;
 	       	    resetAll();
-	       	    originals.forEach(createGroupFiltersFrom);
-	       	    originals.forEach(createIndexes);
-	       	    ranges.forEach(sortRange)
+	       	    objects.forEach(createGroupFiltersFrom);
+	       	    objects.forEach(createIndexes);
+	       	    initRangeFromOriginals = initRange.from(massIsolator.from(objects));
+	       	    ranges.forEach(initRangeFromOriginals);
 	       	}
 	       	function valuesOf(fGroup) {
 	       	    fGroup = fGroup && groupMap[fGroup];
