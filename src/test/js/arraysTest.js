@@ -1,6 +1,9 @@
 /*global module*/
-var test = module.require('./test');
-var arrays = module.require('../../main/js/arrays');
+var test = module.require('./test'),
+    arrays = module.require('../../main/js/arrays'),
+    getter = arrays.getter,
+    isolator = arrays.isolator,
+    massIsolator = arrays.massIsolator;
 
 test('numeric intersections', function(a) {
     var inter = arrays.intersection;
@@ -35,12 +38,17 @@ var COLORS = [
         new Color('green', '#0f0'),
         new Color('blue', '#00f')
     ];
+test('getting props', a => {
+    var getColorName = getter.of('name');
+    a.equals(getColorName(COLORS[0]), 'red');
+    a.equals(getColorName(COLORS[1]), 'green');
+});
 test('isolation', function(a) {
     var data = COLORS.slice(),
-        isolateName = arrays.isolator.of('name'),
-        isolateColor = arrays.isolator.of('color'),
-        isolateMissing = arrays.isolator.of('missing'),
-        isolateShort = arrays.isolator.of('short', o=>o.getShort());
+        isolateName = isolator.of('name'),
+        isolateColor = isolator.of('color'),
+        isolateMissing = isolator.of('missing'),
+        isolateShort = isolator.of('short', o=>o.getShort());
     var names = data.map(isolateName);
     a.equals(names.map(o=>o.name).join("_"), "red_green_blue");
     a.equals(names.map(o=>o.i).join(""), "012");
@@ -60,7 +68,7 @@ test('isolation', function(a) {
 });
 test('array isolation', function(a) {
     var data = COLORS.slice(),
-        isolate = arrays.massIsolator.from(data);
+        isolate = massIsolator.from(data);
     var names = isolate('name');
     a.equals(names.map(o=>o.name).join("_"), "red_green_blue");
     a.equals(names.map(o=>o.i).join(""), "012");
