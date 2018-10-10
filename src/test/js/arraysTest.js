@@ -3,7 +3,9 @@ var test = module.require('./test'),
     arrays = module.require('../../main/js/arrays'),
     getter = arrays.getter,
     isolator = arrays.isolator,
-    massIsolator = arrays.massIsolator;
+    binarySearch = arrays.binarySearch,
+    massIsolator = arrays.massIsolator,
+    NIL;
 
 test('numeric intersections', function(a) {
     var inter = arrays.intersection;
@@ -85,4 +87,21 @@ test('array isolation', function(a) {
     a.equals(shorts.map(o=>o.color).join(""), "");
     a.equals(shorts.map(o=>o.short).join(""), "RGB");
     a.end();
+});
+test('array binary search', function(a) {
+    var data = [{px:-3},{px:0},{px:2},{px:6},{px:7},{px:9}],
+        strictlySup = binarySearch.strict.bind(NIL, data, 'px'),
+        sup = binarySearch.including.bind(NIL, data, 'px');
+    a.equals(strictlySup(-4), 0);
+    a.equals(sup(-4), 0);
+    a.equals(strictlySup(-3), 1);
+    a.equals(sup(-3), 0);
+    a.equals(strictlySup(0), 2);
+    a.equals(sup(0), 1);
+    a.equals(strictlySup(6), 4);
+    a.equals(sup(6), 3);
+    // bear in mind that returned index
+    // can be after last element! 
+    a.equals(strictlySup(9), 6);
+    a.equals(sup(9), 5);
 });

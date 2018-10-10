@@ -43,6 +43,33 @@ function massIsolator(data, prop, getValue) {
 massIsolator.from = function massIsolatorFrom(array) {
     return massIsolator.bind(NIL, array);
 };
+function binarySearch(isMore, data, key, value, start, end) {
+  var cnt = data.length, mid;
+  if (start === NIL) {
+    start = 0;
+    end = cnt-1;
+  }
+  if (end - start < 2) {
+  	  return isMore(data[start][key], value)?
+  	      start: 
+  	      isMore(data[end][key], value)?
+  	          end:
+  	          cnt;
+  }
+  mid = Math.floor((start + end) / 2);
+  if (isMore(data[mid][key], value)) {
+    return Math.min(binarySearch(isMore, data, key, value, start, mid-1), mid);
+  }
+  return binarySearch(isMore, data, key, value, mid+1, end);
+}
+function isStrictlyMore(value, threshold) {
+    return value > threshold;
+}
+function isMoreOrEqual(value, threshold) {
+    return value >= threshold;
+}
+binarySearch.strict = binarySearch.bind(NIL, isStrictlyMore);
+binarySearch.including = binarySearch.bind(NIL, isMoreOrEqual);
 
 if (module) {
     module.exports = {
@@ -50,6 +77,7 @@ if (module) {
 	       union: union,
 	       getter: getter,
 	       isolator: isolator,
-	       massIsolator: massIsolator
+	       massIsolator: massIsolator,
+	       binarySearch: binarySearch
 	   };
 }
