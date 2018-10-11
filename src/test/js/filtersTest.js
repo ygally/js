@@ -1,6 +1,6 @@
 /*global require */
-var cage = require('../../main/js/yacage');
 var test = require('./test');
+var cage = require('../../main/js/yacage');
 
 require('../../main/js/filters');
 
@@ -8,8 +8,9 @@ function numerically(a, b) {
     return Math.sign(a-b);
 }
 
-test('simple filters', function(a) {
-    cage(['filters'], function simpleFilters(core, filters) {
+cage(['filters'], function usingFilters(core, filterLib) {
+    test('simple filters', function(a) {
+        var filters = filterLib;
         filters.create('matchA', o => o.name.indexOf('a') >= 0);
         filters.create('matchE', o => o.name.indexOf('e') >= 0);
         filters.create('matchR', o => o.name.indexOf('r') >= 0);
@@ -24,11 +25,9 @@ test('simple filters', function(a) {
         a.equals(filters.objectsFor('matchR').map(o=>o.name).join("_"), "spray_present");
         a.end();
     });
-});
 
-test('based on value filters', function(a) {
-    cage(['filters'], function valueFilters(core, filterLib) {
-        filters = filterLib.newInstance();
+    test('based on value filters', function(a) {
+        var filters = filterLib.newInstance();
         filters.byProperty('category');
         filters.byProperty('age', 'years');
         filters.byProperty('cute', o => o.isCute && o.isCute() || !1);
@@ -52,11 +51,9 @@ test('based on value filters', function(a) {
         a.equals(filters.objectsFor('category:Mau égyptien').map(o=>o.name).sort().join("_"), "Alex_Cuttie");
     	   a.end();
     });
-});
 
-test('standalone filters', function(a) {
-    cage(['filters'], function standaloneFilters(core, filterLib) {
-        filters = filterLib.newInstance();
+    test('standalone filters', function(a) {
+        var filters = filterLib.newInstance();
         filters.byProperty('type');
         filters.byProperty('faces');
         var shapes = [
@@ -74,11 +71,9 @@ test('standalone filters', function(a) {
         a.equals(filters.objectsFor('type:2D').map(o=>o.name).sort().join("_"), "square_triangle");
     	   a.end();
     });
-});
 
-test('init filters multiple times', function(a) {
-    cage(['filters'], function standaloneFilters(core, filterLib) {
-        filters = filterLib.newInstance();
+    test('init filters multiple times', function(a) {
+        var filters = filterLib.newInstance();
         filters.create('E', o => o.name.charAt(0) == 'e');
         filters.byProperty('color');
         var coins = [
@@ -95,11 +90,9 @@ test('init filters multiple times', function(a) {
         a.equals(filters.names().sort().join(";"), 'E;color:grey;color:red');
     	   a.end();
     });
-});
 
-test('range filters', function(a) {
-    cage(['filters'], function standaloneFilters(core, filterLib) {
-        filters = filterLib.newInstance();
+    test('range filters', function(a) {
+        var filters = filterLib.newInstance();
         filters.createRange('number', o => +o.name.charAt(1));
         var coins = [
             {name: 'c20', color: 'red'},

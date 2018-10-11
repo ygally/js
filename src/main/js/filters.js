@@ -6,8 +6,10 @@ var cage = module.require('./yacage'),
     arrays = module.require('./arrays'),
     sorts = module.require('./sorts'),
     getter = arrays.getter,
+    binarySearch = arrays.binarySearch,
     massIsolator = arrays.massIsolator,
     comparator = sorts.comparator,
+	   	EMPTY = {},
     NIL;
 function removeFrom(array, e) {
     array.splice(array.indexOf(e), 1);
@@ -18,33 +20,6 @@ function matches(prefix, text) {
 function extractNameOf(object) {
     return object.name;
 }
-function binarySearch(isMore, data, key, value, start, end) {
-  var cnt = data.length, mid;
-  if (start === NIL) {
-    start = 0;
-    end = cnt-1;
-  }
-  if (end - start < 2) {
-  	  return isMore(data[start][key], value)?
-  	      start: 
-  	      isMore(data[end][key], value)?
-  	          end:
-  	          cnt;
-  }
-  mid = Math.floor((start + end) / 2);
-  if (isMore(data[mid][key], value)) {
-    return Math.min(binarySearch(isMore, data, key, value, start, mid-1), mid);
-  }
-  return binarySearch(isMore, data, key, value, mid+1, end);
-}
-function isStrictlyMore(value, threshold) {
-    return value > threshold;
-}
-function isMoreOrEqual(value, threshold) {
-    return value >= threshold;
-}
-binarySearch.strict = binarySearch.bind(NIL, isStrictlyMore);
-binarySearch.including = binarySearch.bind(NIL, isMoreOrEqual);
 function lowerThanExtractor(searcher, array, value) {
     return array.slice(0, searcher(value));
 }
@@ -53,8 +28,7 @@ function greaterThanExtractor(searcher, array, value) {
 }
 cage('provide:filters', function filtersDefinition(core) {
 	   	var managers = [],
-	   	    managerMap = {},
-	   	    NIL;
+	   	    managerMap = {};
 	   function addManager(name) {
 	   	    var filters = [],
 	   	        filterMap = {},
@@ -189,23 +163,15 @@ cage('provide:filters', function filtersDefinition(core) {
 	           fRange.index.min = greaterThanExtractor.bind(NIL, indexOfMoreOrEqual, fRange.index);
 	           fRange.index.max = lowerThanExtractor.bind(NIL, indexOfMore, fRange.index);
 	           function betweenBounds(data, first, last) {
-	           	    data.slice(
+	           	    return data.slice(
 	                   indexOfMoreOrEqual(first),
 	                   indexOfMore(last)
 	               );
 	           	}
 	           fRange.index.between = function between(first, last) {
 	               return last === NIL?
-	                   {"and": function and(maxValue) {
-	                       return fRange.index.slice(
-	                           indexOfMoreOrEqual(first),
-	                           indexOfMore(maxValue)
-	                       );
-	                   }}:
-	                   fRange.index.slice(
-	                       indexOfMoreOrEqual(first),
-	                       indexOfMore(last)
-	                   );
+	                   { "and": betweenBounds.bind(NIL, fRange.index, first) }:
+	                   betweenBounds(fRange.index, first, last);
 	           };
 	       	}
 	       	initRange.from = function initRangeFrom(propertyIsolator) {
@@ -220,12 +186,10 @@ cage('provide:filters', function filtersDefinition(core) {
 	       	    ranges.forEach(initRangeFromOriginals);
 	       	}
 	       	function valuesOf(fGroup) {
-	       	    fGroup = fGroup && groupMap[fGroup];
-	       	    return fGroup && fGroup.values;
+	       	    return (groupMap[fGroup] || EMPTY).values;
 	       	}
 	       	function indexesFor(f) {
-	       	    f = f && (filterMap[f] || rangeMap[f]);
-	       	    return f && f.index;
+	       	    return (filterMap[f] || rangeMap[f] || EMPTY).index;
 	       	}
 	       	function objectsFor(f) {
 	       	    return originalsFrom(indexesFor(f));
