@@ -26,6 +26,32 @@ function lowerThanExtractor(searcher, array, value) {
 function greaterThanExtractor(searcher, array, value) {
     return array.slice(searcher(value));
 }
+function isFunction(f) {
+    return typeof f === 'function';
+}
+	       
+// simple filters
+function SimpleFilter(name, accept) {
+    this.name = name;
+    this.accept = accept;
+    this.index = [];
+}
+
+// group of filters
+function GroupOfFilters(name, property) {
+	   var getValue = property;
+	   if (!isFunction(getValue)) {
+	       	getValue = function getValue(o) {
+	       	    return o[property];
+	       	};
+	   }
+	   this.name = name;
+	   this.getValue = getValue;
+	   this.values = [];
+	   this.index = NIL;
+	   this.isolated = NIL;
+}
+
 cage('provide:filters', function filtersDefinition(core) {
 	   	var managers = [],
 	   	    managerMap = {};
@@ -47,12 +73,12 @@ cage('provide:filters', function filtersDefinition(core) {
         function resetOne(filtr) {
 	   	        filtr.index = [];
 	       }
-	       function names(prefix) {
+	       function names(name) {
 	       	    var list = filters.map(extractNameOf);
 	       	    list = list.concat(ranges.map(extractNameOf));
-	       	    if (!prefix) { return list; }
-	       	    prefix = new RegExp('^' + prefix + ':');
-	       	    return list.filter(matches.bind(NIL, prefix));
+	       	    if (!name) { return list; }
+	       	    name = new RegExp('^' + name + ':');
+	       	    return list.filter(matches.bind(NIL, name));
 	       	}
 	       function removeFilter(name) {
 	       	    if (!filterMap.hasOwnProperty(name)) {
@@ -63,7 +89,7 @@ cage('provide:filters', function filtersDefinition(core) {
 	       }
 	       function resetOneGroup(g) {
 	   	        g.values = [];
-	   	        names(g.prefix).forEach(removeFilter);
+	   	        names(g.name).forEach(removeFilter);
 	       }
 	       function resetAll() {
 	           groups.forEach(resetOneGroup);
@@ -76,11 +102,7 @@ cage('provide:filters', function filtersDefinition(core) {
 	       	    if (filterMap[name]) {
 	       	        throw 'create(): filter already exists for name "' + name + '"';
 	       	    }
-            var f = {
-                "name": name,
-                "accept": accept,
-                "index": []
-            };
+            var f = new SimpleFilter(name, accept);
             filters.push(f);
             filterMap[name] = f;
 	       }
@@ -91,51 +113,25 @@ cage('provide:filters', function filtersDefinition(core) {
 	       	    if (rangeMap[name]) {
 	       	        throw 'createRange(): filter range already exists for name "' + name + '"';
 	       	    }
-            property = property || name;
-	       	    var getValue = property;
-	       	    if (!isFunction(getValue)) {
-	       	        getValue = function getValue(o) {
-	       	    	   	    return o[property];
-	       	        };
-	       	    }
-	       	    var fRange = {
-	       	        "name": name,
-	       	        "getValue": getValue,
-	       	        "index": NIL,
-	       	        "isolated": NIL
-	       	    };
+            var fRange = new GroupOfFilters(name, property || name);
             ranges.push(fRange);
             rangeMap[name] = fRange;
 	       }
-	       function isFunction(f) {
-            return typeof f === 'function';
-        }
-	       function createByProperty(prefix, property) {
-	       	    if (!prefix) {
-	       	        throw 'createByProperty(): need name prefix for filter group';
+	       function createByProperty(name, property) {
+	       	    if (!name) {
+	       	        throw 'createByProperty(): need name for filter group';
 	       	    }
-	       	    if (groupMap[prefix]) {
-	       	        throw 'createByProperty(): filter group already exists for prefix "' + prefix + '"';
+	       	    if (groupMap[name]) {
+	       	        throw 'createByProperty(): filter group already exists for name "' + name + '"';
 	       	    }
-	       	    property = property || prefix;
-	       	    var getValue = property;
-	       	    if (!isFunction(getValue)) {
-	       	        getValue = function getValue(o) {
-	       	    	   	    return o[property];
-	       	        };
-	       	    }
-	       	    var fGroup = {
-	       	        "prefix": prefix,
-	       	        "getValue": getValue,
-	       	        "values": []
-	       	    };
+	       	    var fGroup = new GroupOfFilters(name, property || name);
 	       	    groups.push(fGroup);
-            groupMap[prefix] = fGroup;
+            groupMap[name] = fGroup;
 	       	}
 	       function createGroupFiltersFrom(obj) {
 	       	    function createIfNewForGroup(g) {
 	       	        var value = g.getValue(obj),
-	       	            name = g.prefix + ':' + value;
+	       	            name = g.name + ':' + value;
 	       	        if (!filterMap[name]) {
 	       	            g.values.push(value);
 	       	            create(name, function acceptOneVal(o) {
