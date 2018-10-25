@@ -19,12 +19,9 @@ function getFunction(f) {
     return isFunction(f)? f: noop;
 }
 
-function identity(x) { return x; }
 function give(data) {
-    return function dataGiver() { return data; };
+    return function giveData() { return data; };
 }
-var map = Array.prototype.map;
-var shift = Array.prototype.shift;
 
 /**
 * Check if a value is a Promise and, if it is,
@@ -191,7 +188,7 @@ function $trigger(transform, ya, no, defolt) {
 }
 
 // Prom style 'then' callback handling & syn
-promProto.then = promProto.den =
+promProto.then =
    function then(onDone, onFail, name) {
       var self = this;
       return new Promise(function thenPromDefine(ya, no) {
@@ -200,17 +197,17 @@ promProto.then = promProto.den =
              $trigger(onFail, ya, no, no, self)
           );
       },
-      name || ('den~'+(puid++)));
+      name || ('then~'+(puid++)));
   };
 // Prom style 'catch' callback handling & syn
 promProto['catch'] = promProto.or =
    function or(onFail, name) {
-      return this.den(NIL, onFail,
+      return this.then(NIL, onFail,
           name || ('catch~'+(puid++)));
    };
 // Proprietary retry impl
 function retry(promise, retries, errors) {
-    return promise.den(function retryOnDone(data) {
+    return promise.then(function retryOnDone(data) {
        // when prom succeeds, return data
        return data;
        // FIXME find a way of giving access to errors when finally successfully
@@ -307,7 +304,7 @@ function $deliveryCallable(store, f) {
 }
 function $delivery(store, f) {
    if (isPromise(f)) {
-       return f.den(function(d) {
+       return f.then(function(d) {
           store.push(d);
        });
    }
@@ -335,14 +332,14 @@ function seq(actions) {
        while (a<cnt) {
            // and chain one more
            // until end of array
-           prom = prom.den(
+           prom = prom.then(
                $delivery(
                    store,
                     actions[a++]
                )
            );
        }
-       prom = prom.den(give(store));
+       prom = prom.then(give(store));
    } else {
        prom = resolve(store);
    }
