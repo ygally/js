@@ -1,3 +1,3 @@
-require('./PromiseTest');
-require('./PromiseDelegateTest');
-require('./PromiseRetryTest');
+module.require('./PromiseTest');
+module.require('./PromiseDelegateTest');
+module.require('./PromiseRetryTest');

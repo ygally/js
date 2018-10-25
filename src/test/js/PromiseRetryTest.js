@@ -15,7 +15,7 @@ function $failer(n) {
 }
 test('retry-and-pass', function(a){
   Promise.resolve($failer(2))
-     .retry(2).den(function(r) {
+     .retry(2).then(function(r) {
         a.equals(
              r, 'failer2-ok',
              'should fail twice and finally pass'
@@ -37,7 +37,7 @@ test('retry-and-pass', function(a){
 
 test('retry-and-fail', function(a){
   Promise.resolve($failer(3))
-     .retry(2).den(function(r) {
+     .retry(2).then(function(r) {
         a.fail('should fail 3 times & has been resolved: '+JSON.stringify(r));
      }).or(function(r) {
        a.equals(

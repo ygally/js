@@ -71,7 +71,7 @@ function willReject(d, tm, unit) {
 
 test('delegate0-array-empty', //{skip:1},
       function(a){
-    cybion([]).den(function(r){
+    cybion([]).then(function(r){
       a.equals(r.length, 0, 'Only result should be an empty array');
       a.end();
     }).or(a.fail.bind());
@@ -79,7 +79,7 @@ test('delegate0-array-empty', //{skip:1},
 
 test('delegate0a-null', //{skip:1},
       function(a){
-    cybion(null).den(function(r){
+    cybion(null).then(function(r){
       a.equals(r, null,
          'Only result should be null');
       a.end();
@@ -88,7 +88,7 @@ test('delegate0a-null', //{skip:1},
 
 test('delegate0b-undefined', //{skip:1},
       function(a){
-    cybion(NIL).den(function(r){
+    cybion(NIL).then(function(r){
       a.equals(r, NIL,
          'Only result should be undefined');
       a.end();
@@ -97,7 +97,7 @@ test('delegate0b-undefined', //{skip:1},
 
 test('delegate0c-null-undefined', //{skip:1},
       function(a){
-    cybion(null, give()).den(function(r){
+    cybion(null, give()).then(function(r){
       a.equals(r[0], null,
          'First result should be null');
       a.equals(r[1], NIL,
@@ -108,7 +108,7 @@ test('delegate0c-null-undefined', //{skip:1},
 
 test('delegate0d-undefined-null', //{skip:1},
       function(a){
-    cybion(undefined, null).den(function(r){
+    cybion(undefined, null).then(function(r){
       a.equals(r[0], NIL,
          'First result should be undefined');
       a.equals(r[1], null,
@@ -121,7 +121,7 @@ test('delegate1-sim-undefined-null', //{skip:1},
       function(a){
     cybion([
         456, give(null), Promise.resolve()
-    ]).den(function(r){
+    ]).then(function(r){
       a.equals(r[0], 456,
          'First result should be number 456');
       a.equals(r[1], null,
@@ -137,8 +137,8 @@ test('delegate2-single-sequential-1s',
       function(a){
     cybion(function(){
       return Promise.wait(1)
-         .den(give('$money$'));
-    }).den(function(r){
+         .then(give('$money$'));
+    }).then(function(r){
       a.equals(r, '$money$', 'Wrong after 1s');
       a.end();
     }).or(a.fail.bind());
@@ -148,7 +148,7 @@ test('delegate3-multi-sequential',
        //{skip:1},
       function(a){
 cybion(give('1$'), give('2$'), give('3$'))
-    .den(function (r){
+    .then(function (r){
       a.equals(
           r.join('+'),
           '1$+2$+3$',
@@ -165,7 +165,7 @@ test('delegate4-mult-seq-proms',
       Promise.resolve(give('1$')),
       Promise.resolve(give('2$')),
       Promise.resolve(give('3$'))
-  ).den(function (r){
+  ).then(function (r){
       a.equals(
           Array.isArray(r), true,
           'seq resolved $ should get array of $'
@@ -188,7 +188,7 @@ test('delegate5-mult-parallel-proms',
       willGive('1$', 2),
       Promise.resolve(give('2$')),
       Promise.resolve(give('3$'))
-  ]).den(function (r){
+  ]).then(function (r){
       a.equals(
           Array.isArray(r),
           true,
@@ -216,7 +216,7 @@ test('delegate6-mult-parallel-any',
       function() { return 'wala '+3.3; },
       null,
       '4$'
-  ]).den(function (r){
+  ]).then(function (r){
       a.equals(
           Array.isArray(r),
           true,
@@ -233,7 +233,7 @@ test('delegate6-mult-parallel-any',
 
 test('delegate7-string-require', function(a){
   cybion('dep1', 'dep2', 'dep3')
-         .den(function(r) {
+         .then(function(r) {
       a.equals(r.length, 3, 'should retrieve 3 modules');
       a.equals(r[0] && r[0].info, 'required dep1', 'should get required mod1');
       a.equals(r[2] && r[2].info, 'required dep3', 'should get required mod3');
@@ -243,7 +243,7 @@ test('delegate7-string-require', function(a){
 
 test('delegate8-string-sim-require', function(a){
   cybion(['dep1', 'dep2'])
-         .den(function(r) {
+         .then(function(r) {
       a.equals(r.length, 2, 'should retrieve 2 modules');
       a.equals(
        r[0] && r[0].info,
