@@ -2,7 +2,7 @@
 var EMPTY_DATA = {},
     DEFAULT_TAGS = ['[¤', '¤]'],
     REGEXP_NAMESPACE_SPLIT = /[,.]/,
-    REGEXP_QUOTE = /[.*+?^${}()|[\]\\]/g;
+    REGEXP_QUOTE = /[.*+?\^${}()|\[\]\\]/g;
 function quote(s) {
     // $& means the whole matched string
     return (''+s).replace(REGEXP_QUOTE, '\\$&');
