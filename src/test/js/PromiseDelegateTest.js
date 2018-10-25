@@ -1,7 +1,6 @@
-/*global module */
-var Promise = require('../../main/js/Promise');
-var test = require('./test');
-
+/*global module*/
+var test = module.require('./test');
+var Promise = module.require('../../main/js/Promise');
 var NIL, isArray = Array.isArray;
 function identity(x) { return x; }
 function isString(s) {

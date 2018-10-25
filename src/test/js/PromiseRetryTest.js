@@ -1,6 +1,6 @@
-/*global module */
-var Promise = require('../../main/js/Promise');
-var test = require('./test');
+/*global module*/
+var test = module.require('./test');
+var Promise = module.require('../../main/js/Promise');
 
 function $failer(n) {
     var failer = {r: n, d: 'failer'+n};

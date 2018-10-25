@@ -1,5 +1,6 @@
+/*global module*/
 var formatSettings = {tags: ["{{", "}}"]},
-    stringFormat = require('./stringFormat').build(formatSettings),
+    stringFormat = module.require('./stringFormat').build(formatSettings),
     isArray = Array.isArray,
     NIL;
 function identity(d) { return d; }
