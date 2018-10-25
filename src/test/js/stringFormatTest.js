@@ -1,6 +1,6 @@
-/*global module, require*/
-var stringFormat = require('../../main/js/stringFormat');
-var test = require('./test');
+/*global module*/
+var test = module.require('./test');
+var stringFormat = module.require('../../main/js/stringFormat');
 
 test('capitalizer', a => {
     a.equals(stringFormat.capitalize('doggyStyle'), 'DoggyStyle');
