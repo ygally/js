@@ -1,5 +1,6 @@
-var contextualize = require('../../main/js/contextualize');
-var test = require('./test');
+/*global module*/
+var test = module.require('./test');
+var contextualize = module.require('../../main/js/contextualize');
 var data = {
 	   dir: "root/test",
 	   file: "yg.nfo",
