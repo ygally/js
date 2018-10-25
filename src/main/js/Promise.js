@@ -56,22 +56,19 @@ function doResolve(cl, onDone, onFail) {
     var still = 1;
     function fulfill(data) {
         if (still) {
-        	   still = 0;
-        	   //console.log('calling on done [ ' + onDone.name+ ' ; ' +typeof data+ ' ]');
-        	   onDone(data);
+               still = 0;
+               onDone(data);
         }
     }
     function reject(err) {
         if (still) {
-       	     still = 0;
-       	     //console.log('calling on fail [ ' + onFail.name+ ' ; ' +err+ ' ]');
-       	     onFail(err);
-       	 }
+             still = 0;
+             onFail(err);
+         }
     }
     try {
         cl(fulfill, reject);
     } catch (e) {
-    	   //console.log('error ' +e);
         reject(e);
     }
 }
@@ -86,8 +83,8 @@ function doResolve(cl, onDone, onFail) {
 */
 function $callable(func) {
     return function callableFunc(resolve) {
-  	     resolve(func());
-  	 };
+         resolve(func());
+     };
 }
 
 // states
@@ -100,7 +97,6 @@ puid = Math.round(puid);
 function Promise(cl, name) {
 var self = this;
 self.name = name;
-//console.log('promise create => ' + name);
   // store state which can be
   // WAIT, YES or NO
   var state;
@@ -110,15 +106,11 @@ self.name = name;
   var handlers = [];
 
   function handle(handler) {
-  	    //console.log('handle(): start [' + handler + ']');
       if (state === YES) {
-      	    //console.log('handle(): yes [' + handler.onDone.name + ']');
           handler.onDone(data);
       } else if (state === NO) {
-      	    //console.log('handle(): no [' + handler.onFail.name + ']');
           handler.onFail(data);
       } else {
-      	    //console.log('handle(): push');
           handlers.push(handler);
       }
   }
@@ -126,33 +118,26 @@ self.name = name;
   function gYa(d) {
      state = YES;
      data = d;
-     //console.log('gYa(): start');
      handlers.forEach(handle);
      handlers = NIL;
-     //console.log('gYa(): end');
   }
 
   function gNo(error) {
      state = NO;
      data = error;
-     //console.log('gNo(): start');
      handlers.forEach(handle);
      handlers = NIL;
-     //console.log('gNo(): end');
   }
 
   function solve(res) {
     try {
        var then = getThen(res);
        if (then) {
-          //console.log('solve(): then ok calling doResolve(solve) recursive [ res = ' +res+ ' ]');
-        	  doResolve(then.bind(res), solve, gNo);
+              doResolve(then.bind(res), solve, gNo);
        } else {
-       	   //console.log('solve(): then !ok calling gYa [ res = ' +res+ ' ]');
           gYa(res);
        }
     } catch (e) {
-    	  //console.log('solve(): catch calling gNo [ res = ' +res+ ' ]');
        gNo(e);
     }
   }
@@ -163,7 +148,6 @@ self.name = name;
 
   // classic callback manage~t (ok & fail)
   self.done = function done(onDone, onFail) {
-      //console.log('done(): creating handler [ onDone=' + onDone.name+ ' ; onFail=' +onFail.name+ ' ] state = '+state);
       // ensure we are always asynchronous
       setTimeout(handle.bind(NIL, {
           onDone: getFunction(onDone),
@@ -236,7 +220,6 @@ function retry(promise, retries, errors) {
        // and if there is more retries...
        if (retries>0) {
           // ...recurse with Promise duplicate
-          //console.log('retry '+retries+' times...');
           return retry(
             promise.fork(),
             retries - 1,
@@ -342,7 +325,7 @@ function seq(actions) {
    var store = [], prom, a=0, nextAction,
    cnt = actions.length;
    if (cnt) {
-       // on crÃ©une premiÃ¨ prom
+       // create a first prom
        prom = new Promise(
            $deliveryCallable(
                store,
@@ -370,11 +353,8 @@ function all(promises, name) {
     promises = promises || [];
    var store = [], n = promises.length;
    var action = function allAction(ya) {
-      	//console.log('promise all... ' + n + ' => inside "all" action');
        ya(store);
-       //console.log('promise all... ' + n + ' => ya done [' + ya.name + ']');
    };
-   //console.log('promise all... ' + n + ' => chain loop create');
    while (n) {
        // chain last defined action
        // with the previous one
@@ -384,7 +364,6 @@ function all(promises, name) {
           action
        );
      }
-   //console.log('promise all... ' + n + ' => chain loop ready to start');
    return new Promise(action,
            name || ('all~'+(puid++)));
 }
