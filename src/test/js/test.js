@@ -1,3 +1,4 @@
+/*global module*/
 var GLOBAL_DBG = 1;
 var PFX = '';
 var logger = {
