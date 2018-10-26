@@ -3,7 +3,7 @@ var test = module.require('./test');
 var Promise = module.require('../../main/js/Promise');
 var cage = module.require('../../main/js/yacage');
 
-EMULATED_REMOTE = {
+var EMULATED_REMOTE = {
     'pawa': function pawa() {
            cage(
            'provide:pawa',
@@ -18,7 +18,7 @@ EMULATED_REMOTE = {
         });
   }
 };
-EMULATED_CACHE = {
+var EMULATED_CACHE = {
     'substract': function substractLoader() {
            cage(
            'provide:substract',
@@ -62,11 +62,11 @@ test('require adder', function(a) {
         });
 });
 
-test('require subtract', function(a) {
+test('require substract', function(a) {
     cage(
-           ['subtract'],
-           function simpleRemove(core, substrat) {
-            a.equals(subtract(8, 3), 5, '8-3 => 5');
+        ['substract'],
+        function simpleRemove(core, substract) {
+            a.equals(substract(8, 3), 5, '8-3 => 5');
             a.end();
         });
 });
@@ -111,20 +111,19 @@ test('require adder&multiplier&divide', function(a) {
 
 test('require calc', function(a) {
     cage(
-         'provide:calc',
-           ['adder', 'substract', 'multiplier', 'pawa'],
-           function calcDefine(core, add, sub, mult, power) {
-               return {
-                    add: add,
-                    sub: sub,
-                    mult: mult,
-                    power: power,
-                    sqr: function square(x) {
-                           return power(x, 2);
-                    }
-                };
+        'provide:calc',
+        ['adder', 'substract', 'multiplier', 'pawa'],
+        function calcDefine(core, add, sub, mult, power) {
+            return {
+                add: add,
+                sub: sub,
+                mult: mult,
+                power: power,
+                sqr: function square(x) {
+                    return power(x, 2);
+                }
+            };
         });
-    a.pass('started to provide Calc module');
     cage(
            'calc',
            function calcUse1(core, calc) {

@@ -45,49 +45,49 @@ var cagePromiseResolver,
     cagePromise;
 function cage(name, dep, define, fail) {
     if (RE_PROVIDE.test(name)) {
-           name = name.replace(RE_PROVIDE, '');
+        name = name.replace(RE_PROVIDE, '');
     } else {
-           // this case represents a simple use
+        // this case represents a simple use
         // not a definition
         fail = define;
-           define = dep;
-           dep = name;
-           name = NIL;
+        define = dep;
+        dep = name;
+        name = NIL;
     }
     var definition;
     if (typeof dep === 'function') {
-           fail = define;
-           define = dep;
-           dep = [];
+        fail = define;
+        define = dep;
+        dep = [];
     } else if (Array.isArray(dep)) {
-           dep = dep.map(retrieveDep);
+        dep = dep.map(retrieveDep);
     } else {
-           dep = [retrieveDep(dep)];
-       }
-       dep = [cagePromise].concat(dep);
-       function defineModuleWith(deps) {
-           try{
-                return define.apply(NIL, deps);
-            } catch(e) {
-                   console.error('Error while defining/executing module ' + (name? '"' + name + '" ': ''), e);
-            }
-       }
-       var allDepsReady = Promise.all(dep, 'all_' + name + '_deps');
-       if (name) {
-            function definitionResolver(resolve, reject) {
-                allDepsReady
-                    .then(defineModuleWith)
-                    .then(function definitionResolve(definition) {
-                        resolve(definition);
-                    })
-                    .or(reject);
-            }
-            modules[name] = new Promise(definitionResolver, name + 'Promise');
-       } else {
-            allDepsReady
-                .then(defineModuleWith)
-                .or(createDepErrorHandler(fail));
-       }
+        dep = [retrieveDep(dep)];
+    }
+    dep = [cagePromise].concat(dep);
+    function defineModuleWith(deps) {
+        try{
+            return define.apply(NIL, deps);
+        } catch(e) {
+            console.error('Error while defining/executing module ' + (name? '"' + name + '" ': ''), e);
+        }
+    }
+    var allDepsReady = Promise.all(dep, 'all_' + name + '_deps');
+    function definitionResolver(resolve, reject) {
+        allDepsReady
+            .then(defineModuleWith)
+            .then(function definitionResolve(definition) {
+                    resolve(definition);
+                })
+            .or(reject);
+    }
+    if (name) {
+        modules[name] = new Promise(definitionResolver, name + 'Promise');
+    } else {
+        allDepsReady
+            .then(defineModuleWith)
+            .or(createDepErrorHandler(fail));
+    }
 }
 cagePromiseResolver = function cagePromiseResolver(resolve) {
     resolve(cage);
