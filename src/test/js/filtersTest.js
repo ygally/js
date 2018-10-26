@@ -1,8 +1,8 @@
-/*global require */
-var test = require('./test');
-var cage = require('../../main/js/yacage');
+/*global module*/
+var test = module.require('./test');
+var cage = module.require('../../main/js/yacage');
 
-require('../../main/js/filters');
+module.require('../../main/js/filters');
 
 function numerically(a, b) {
     return Math.sign(a-b);

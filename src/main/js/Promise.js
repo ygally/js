@@ -188,17 +188,16 @@ function $trigger(transform, ya, no, defolt) {
 }
 
 // Prom style 'then' callback handling & syn
-promProto.then =
-   function then(onDone, onFail, name) {
-      var self = this;
-      return new Promise(function thenPromDefine(ya, no) {
-          self.done(
-             $trigger(onDone, ya, no, ya, self),
-             $trigger(onFail, ya, no, no, self)
-          );
-      },
-      name || ('then~'+(puid++)));
-  };
+promProto.then = function then(onDone, onFail, name) {
+    var self = this;
+    return new Promise(function thenPromDefine(ya, no) {
+        self.done(
+            $trigger(onDone, ya, no, ya, self),
+            $trigger(onFail, ya, no, no, self)
+        );
+    }, name || ('then~'+(puid++)));
+};
+
 // Prom style 'catch' callback handling & syn
 promProto['catch'] = promProto.or =
    function or(onFail, name) {

@@ -1,3 +1,4 @@
+/*global module*/
 var test = module.require('./test');
 var sorts = module.require('../../main/js/sorts');
 var comparator = sorts.comparator;

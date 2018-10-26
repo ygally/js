@@ -66,7 +66,10 @@ function willFail(name, msg) {
   return fail.bind(NIL, name, msg);
 }
 
-// TESTS
+
+
+// FIXME use "test" lib
+
 function stringValueOf(d) {
     return d === NIL? 'undefined':
         (d === null? 'null': ''+d);
@@ -310,4 +313,4 @@ pr3.then(function(v) {
         assertEquals('PT06.1',
                 'should be twenty',
                 20, e);
-        }); 
+        });

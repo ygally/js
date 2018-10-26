@@ -7,7 +7,9 @@
  *
  * Needs Promise library to work fine.
  */
-var Promise = require('./Promise'),
+
+/*global module*/
+var Promise = module.require('./Promise'),
     NIL,
     modules = {},
 	   downloads = {},
