@@ -12,7 +12,7 @@ function asArray(d) {
 var types = {
     "text": toString,
     "int": toNumber
-}
+};
 function get(data, key, type, fmt) {
     var value;
     if (key) {
