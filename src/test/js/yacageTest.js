@@ -1,7 +1,7 @@
 /*global module */
-var Promise = require('../../main/js/Promise');
-var cage = require('../../main/js/yacage');
-var test = require('./test');
+var test = module.require('./test');
+var Promise = module.require('../../main/js/Promise');
+var cage = module.require('../../main/js/yacage');
 
 EMULATED_REMOTE = {
  	'pawa': function pawa() {
