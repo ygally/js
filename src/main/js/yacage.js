@@ -12,18 +12,18 @@
 var Promise = module.require('./Promise'),
     NIL,
     modules = {},
-       downloads = {},
+    downloads = {},
     RE_PROVIDE = /^provide:/,
     load;
 function defaultLoad(name) {
-       throw 'No module "' + name + '" provided';
+    throw 'No module "' + name + '" provided';
 }
 function setExternalLoad(l) {
-       load = l;
+    load = l;
 }
 load = defaultLoad;
 function createDepErrorHandler(fail) {
-       return fail? function handleDepError(err) {
+    return fail? function handleDepError(err) {
             fail(err);
         }: function handleDepError(err) {
             throw 'Dependency Error: ' + err;
@@ -74,23 +74,23 @@ function cage(name, dep, define, fail) {
        }
        var allDepsReady = Promise.all(dep, 'all_' + name + '_deps');
        if (name) {
-           function definitionResolver(resolve, reject) {
-                   allDepsReady
-                       .then(defineModuleWith)
-                   .then(function definitionResolve(definition) {
-                       resolve(definition);
-                   })
-                   .or(reject);
+            function definitionResolver(resolve, reject) {
+                allDepsReady
+                    .then(defineModuleWith)
+                    .then(function definitionResolve(definition) {
+                        resolve(definition);
+                    })
+                    .or(reject);
             }
-           modules[name] = new Promise(definitionResolver, name + 'Promise');
+            modules[name] = new Promise(definitionResolver, name + 'Promise');
        } else {
-           allDepsReady
-               .then(defineModuleWith)
-               .or(createDepErrorHandler(fail));
+            allDepsReady
+                .then(defineModuleWith)
+                .or(createDepErrorHandler(fail));
        }
 }
 cagePromiseResolver = function cagePromiseResolver(resolve) {
-      resolve(cage);
+    resolve(cage);
 };
 cagePromise = new Promise(cagePromiseResolver, 'mainDep');
 cage.setExternalLoad = setExternalLoad;
