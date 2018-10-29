@@ -46,12 +46,13 @@ function emulatedLoad(name) {
 cage.setExternalLoad(emulatedLoad);
 
 cage(
-       'provide:adder',
-       function addDefine(core) {
-           return function add(a, b) {
-                return a + b;
-           };
-    });
+    'provide:adder',
+    function addDefine(core) {
+        return function add(a, b) {
+            return a + b;
+        };
+    }
+);
 
 test('require adder', function(a) {
     cage(
@@ -60,6 +61,24 @@ test('require adder', function(a) {
             a.equals(add(42, 43), 85, '42+43 => 85');
             a.end();
         });
+});
+
+test('verify double provide fail', a=>{
+    try{
+        cage(
+            'provide:adder',
+            function addDefine(core) {
+                return function erroneousAdd(a, b) {
+                    return a + 2 * b;
+                };
+            }
+        );
+        a.fail('should throw an exception');
+        a.end();
+    } catch(e) {
+        a.pass('exception ok : ' + e);
+        a.end();
+    }
 });
 
 test('require substract', function(a) {
@@ -123,11 +142,12 @@ test('require calc', function(a) {
                     return power(x, 2);
                 }
             };
-        });
+        }
+    );
     cage(
-           'calc',
-           function calcUse1(core, calc) {
-                a.equals(calc.add(3, 6), 9, '3 et 6 : 9');
+        'calc',
+        function calcUse1(core, calc) {
+            a.equals(calc.add(3, 6), 9, '3 et 6 : 9');
             a.equals(calc.sub(47, 5), 42, '47-5 : 42');
             a.equals(calc.mult(4, 7), 28, '4 x 7 : 28');
             a.equals(calc.power(8, 0), 1, '8 ^ 0 : 1');
@@ -136,5 +156,6 @@ test('require calc', function(a) {
             a.equals(calc.power(3, 3), 27, '3 ^ 3 : 27');
             a.equals(calc.sqr(11), 121, '11^2 : 121');
             a.end();
-            });
-        });
+        }
+    );
+});
