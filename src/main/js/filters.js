@@ -30,15 +30,11 @@ function greaterThanExtractor(searcher, array, value) {
 function isFunction(f) {
     return typeof f === 'function';
 }
-	       
-// simple filters
 function SimpleFilter(name, accept) {
     this.name = name;
     this.accept = accept;
     this.index = [];
 }
-
-// group of filters
 function GroupOfFilters(name, property) {
 	   var getValue = property;
 	   if (!isFunction(getValue)) {
@@ -52,7 +48,6 @@ function GroupOfFilters(name, property) {
 	   this.index = NIL;
 	   this.isolated = NIL;
 }
-
 cage('provide:filters', function filtersDefinition(core) {
 	   	var managers = [],
 	   	    managerMap = {};
@@ -153,8 +148,8 @@ cage('provide:filters', function filtersDefinition(core) {
 	       	    fRange.isolated = isolateFromOriginals(fRange.name, fRange.getValue);
 	       	    fRange.isolated.sort(comparator.by(fRange.name));
 	       	    fRange.index = fRange.isolated.map(getter.of('i'));
-	       	    var indexOfMore = binarySearch.strict.bind(NIL, fRange.isolated, fRange.name);
-	           var indexOfMoreOrEqual = binarySearch.including.bind(NIL, fRange.isolated, fRange.name);
+	       	    var indexOfMore = binarySearch.strictlyMore.bind(NIL, fRange.isolated, fRange.name);
+	           var indexOfMoreOrEqual = binarySearch.moreOrEqual.bind(NIL, fRange.isolated, fRange.name);
 	           fRange.index.before = lowerThanExtractor.bind(NIL, indexOfMoreOrEqual, fRange.index);
 	           fRange.index.after = greaterThanExtractor.bind(NIL, indexOfMore, fRange.index);
 	           fRange.index.min = greaterThanExtractor.bind(NIL, indexOfMoreOrEqual, fRange.index);
