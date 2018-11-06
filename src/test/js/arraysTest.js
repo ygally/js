@@ -1,6 +1,8 @@
 /*global module*/
 var test = module.require('./test'),
+    sorts = module.require('../../main/js/sorts'),
     arrays = module.require('../../main/js/arrays'),
+    comparator = sorts.comparator,
     getter = arrays.getter,
     isolator = arrays.isolator,
     binarySearch = arrays.binarySearch,
@@ -90,8 +92,8 @@ test('array isolation', function(a) {
 });
 test('array binary search', function(a) {
     var data = [{px:-3},{px:0},{px:2},{px:6},{px:7},{px:9}],
-        strictlySup = binarySearch.strict.bind(NIL, data, 'px'),
-        sup = binarySearch.including.bind(NIL, data, 'px');
+        strictlySup = binarySearch.strictlyMore.bind(NIL, data, 'px'),
+        sup = binarySearch.moreOrEqual. bind(NIL, data, 'px');
     a.equals(strictlySup(-4), 0);
     a.equals(sup(-4), 0);
     a.equals(strictlySup(-3), 1);
@@ -104,4 +106,29 @@ test('array binary search', function(a) {
     // can be after last element! 
     a.equals(strictlySup(9), 6);
     a.equals(sup(9), 5);
+});
+test('array desc binary search', function(a) {
+	   function Pt(name, x, y) {
+	       this.name = name;
+	       this.x = x;
+	       this.y = y;
+	   }
+    var data = [
+            new Pt('A', 8, 4),
+            new Pt('B', 5, 2),
+            new Pt('C', 2, 6),
+            new Pt('D', 1, 7)
+        ],
+        strictlyLess = binarySearch.strictlyLess.bind(NIL, data, 'x'),
+        isolatedY = data.map(isolator.of('y')).sort(comparator.by('y', 'desc')),
+        maximum = binarySearch.lessOrEqual.bind(NIL, isolatedY, 'y');
+    a.equals(strictlyLess(2), 3);
+    a.equals(strictlyLess(3), 2);
+    a.equals(strictlyLess(5), 2);
+    a.equals(strictlyLess(6), 1);
+    a.equals(maximum(2), 3);
+    a.equals(data[isolatedY[maximum(2)].i].name, 'B');
+    a.equals(data[isolatedY[maximum(3)].i].name, 'B');
+    a.equals(data[isolatedY[maximum(5)].i].name, 'A');
+    a.equals(data[isolatedY[maximum(6)].i].name, 'C');
 });

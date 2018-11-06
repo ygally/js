@@ -31,11 +31,13 @@ function Isolated(prop, value, i) {
 function isolator(prop, getValue, obj, i) {
     return new Isolated(prop, getValue(obj), i);
 }
+function simpleIsolator(prop, obj, i) {
+    return new Isolated(prop, obj[prop], i);
+}
 isolator.of = function isolatorOf(prop, getValue) {
-    if (!getValue) {
-        getValue = getter.of(prop);
-    }
-    return isolator.bind(NIL, prop, getValue);
+    return getValue?
+        isolator.bind(NIL, prop, getValue):
+        simpleIsolator.bind(NIL, prop);
 };
 function massIsolator(data, prop, getValue) {
     return data.map(isolator.of(prop, getValue));
@@ -43,33 +45,44 @@ function massIsolator(data, prop, getValue) {
 massIsolator.from = function massIsolatorFrom(array) {
     return massIsolator.bind(NIL, array);
 };
-function binarySearch(isMore, data, key, value, start, end) {
+function binarySearch(validate, data, key, value, start, end) {
   var cnt = data.length, mid;
   if (start === NIL) {
     start = 0;
     end = cnt-1;
   }
   if (end - start < 2) {
-  	  return isMore(data[start][key], value)?
+  	  return validate(data[start][key], value)?
   	      start: 
-  	      isMore(data[end][key], value)?
+  	      validate(data[end][key], value)?
   	          end:
   	          cnt;
   }
   mid = Math.floor((start + end) / 2);
-  if (isMore(data[mid][key], value)) {
-    return Math.min(binarySearch(isMore, data, key, value, start, mid-1), mid);
+  if (validate(data[mid][key], value)) {
+    return Math.min(binarySearch(validate, data, key, value, start, mid-1), mid);
   }
-  return binarySearch(isMore, data, key, value, mid+1, end);
+  return binarySearch(validate, data, key, value, mid+1, end);
 }
+binarySearch.comparingWith = function comparingWith(validate) {
+    return binarySearch.bind(NIL, validate);
+};
 function isStrictlyMore(value, threshold) {
     return value > threshold;
 }
 function isMoreOrEqual(value, threshold) {
     return value >= threshold;
 }
-binarySearch.strict = binarySearch.bind(NIL, isStrictlyMore);
-binarySearch.including = binarySearch.bind(NIL, isMoreOrEqual);
+function isStrictlyLess(value, threshold) {
+    return value < threshold;
+}
+function isLessOrEqual(value, threshold) {
+    return value <= threshold;
+}
+binarySearch.strictlyMore = binarySearch.comparingWith(isStrictlyMore);
+binarySearch.moreOrEqual = binarySearch.comparingWith(isMoreOrEqual);
+binarySearch.strictlyLess = binarySearch.comparingWith(isStrictlyLess);
+binarySearch.lessOrEqual = binarySearch.comparingWith(isLessOrEqual);
 
 if (module) {
     module.exports = {
