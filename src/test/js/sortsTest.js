@@ -23,6 +23,8 @@ test('sort by name,nb,pos', function(a) {
     a.equals(data.map(o=>o.nb).join("_"), "47_231_398_456");
     data.sort(comparator.by('pos'));
     a.equals(data.map(o=>o.name).join("_"), "Gregory_Arnold_Billy_Anna");
+    data.sort(comparator.by('pos', 'desc'));
+    a.equals(data.map(o=>o.name.charAt(0)).join(""), "ABAG");
     a.end();
 });
 
@@ -30,5 +32,7 @@ test('sort by getter', function(a) {
     var data = players.slice();
     data.sort(comparator.by(o => o.name.length));
     a.equals(data.map(o=>o.name).join("_"), "Anna_Billy_Arnold_Gregory");
+    data.sort(comparator.by(o => o.name.length, 'desc'));
+    a.equals(data.map(o=>o.name.length).join("_"), "7_6_5_4");
     a.end();
 });
