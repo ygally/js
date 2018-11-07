@@ -119,13 +119,13 @@ test('require adder&multiplier', function(a) {
 
 test('require adder&multiplier&divide', function(a) {
     cage(
-           ['adder', 'multiplier', 'divid'],
-           function simpleUse4() {
-                a.fail();
-        }, function(err) {
-               a.equals(err.indexOf('Dependency Error'), 0, 'Should receive a dependency error');
-               a.end();
-        });
+        ['adder', 'multiplier', 'divid'],
+        a.fail,
+        function(err) {
+            a.equals(err.indexOf('Dependency Error'), 0, 'Should receive a dependency error');
+            a.end();
+        }
+    ).then(e => e? a.fail(e): a.pass());
 });
 
 test('require calc', function(a) {
@@ -158,4 +158,15 @@ test('require calc', function(a) {
             a.end();
         }
     );
+});
+
+test('after define then...', function(a) {
+    cage(
+        'provide:square2',
+        ['multiplier'],
+        (core, mul) => (a => mul(a, a))
+    ).then(function useSquare(sqr) {
+        a.equals(sqr(3), 9, '3 au carré : 9');
+        a.end();
+    }).or();
 });
