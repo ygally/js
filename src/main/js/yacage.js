@@ -83,7 +83,7 @@ function cage(name, dep, define, fail) {
     }
     if (name) {
         if (modules[name]) {
-            throw 'Tried to provide an already defined module [' + name + ']';
+            return Promise.reject('Tried to provide an already defined module [' + name + ']');
         }
         return modules[name] = new Promise(definitionResolver, name + 'Promise');
     } else {

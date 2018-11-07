@@ -64,21 +64,20 @@ test('require adder', function(a) {
 });
 
 test('verify double provide fail', a=>{
-    try{
-        cage(
-            'provide:adder',
-            function addDefine(core) {
-                return function erroneousAdd(a, b) {
-                    return a + 2 * b;
-                };
-            }
-        );
-        a.fail('should throw an exception');
+    cage(
+        'provide:adder',
+        function addDefine(core) {
+            return function erroneousAdd(a, b) {
+                return a + 2 * b;
+            };
+        }
+    ).then(d => {
+        a.fail('should throw an exception [' + d + ']');
         a.end();
-    } catch(e) {
+    }).catch(e => {
         a.pass('exception ok : ' + e);
         a.end();
-    }
+    });
 });
 
 test('require substract', function(a) {
