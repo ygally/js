@@ -65,7 +65,11 @@ function binarySearch(validate, data, key, value, start, end) {
   return binarySearch(validate, data, key, value, mid+1, end);
 }
 binarySearch.comparingWith = function comparingWith(validate) {
-    return binarySearch.bind(NIL, validate);
+    customBinarySearch = binarySearch.bind(NIL, validate);
+    customBinarySearch.into = function searchingInto(array) {
+        return customBinarySearch.bind(NIL, array);
+    };
+    return customBinarySearch;
 };
 function isStrictlyMore(value, threshold) {
     return value > threshold;
@@ -83,7 +87,6 @@ binarySearch.strictlyMore = binarySearch.comparingWith(isStrictlyMore);
 binarySearch.moreOrEqual = binarySearch.comparingWith(isMoreOrEqual);
 binarySearch.strictlyLess = binarySearch.comparingWith(isStrictlyLess);
 binarySearch.lessOrEqual = binarySearch.comparingWith(isLessOrEqual);
-
 if (module) {
     module.exports = {
 	       intersection: intersection,
