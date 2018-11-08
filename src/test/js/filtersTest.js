@@ -8,7 +8,7 @@ function numerically(a, b) {
     return Math.sign(a-b);
 }
 
-cage(['filters'], function usingFilters(core, filterLib) {
+cage(['filters'], function usingFilters(filterLib) {
     test('simple filters', function(a) {
         var filters = filterLib;
         filters.create('matchA', o => o.name.indexOf('a') >= 0);

@@ -41,8 +41,6 @@ function retrieveDep(name) {
        }
         return modules[name];
 }
-var cagePromiseResolver,
-    cagePromise;
 function cage(name, dep, define, fail) {
     if (RE_PROVIDE.test(name)) {
         name = name.replace(RE_PROVIDE, '');
@@ -64,7 +62,6 @@ function cage(name, dep, define, fail) {
     } else {
         dep = [retrieveDep(dep)];
     }
-    dep = [cagePromise].concat(dep);
     function defineModuleWith(deps) {
         try{
             return define.apply(NIL, deps);
@@ -92,10 +89,6 @@ function cage(name, dep, define, fail) {
             .or(createDepErrorHandler(fail));
     }
 }
-cagePromiseResolver = function cagePromiseResolver(resolve) {
-    resolve(cage);
-};
-cagePromise = new Promise(cagePromiseResolver, 'mainDep');
 cage.setExternalLoad = setExternalLoad;
 if (module) {
     module.exports = cage;
