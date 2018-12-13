@@ -14,14 +14,11 @@ var Promise = module.require('./Promise'),
     modules = {},
     downloads = {},
     RE_PROVIDE = /^provide:/,
+    EMPTY = {},
     load;
-function defaultLoad(name) {
-    throw 'No module "' + name + '" provided';
+function setExternalLoad(extLoad) {
+    load = extLoad;
 }
-function setExternalLoad(l) {
-    load = l;
-}
-load = defaultLoad;
 function createDepErrorHandler(fail) {
     return fail? function handleDepError(err) {
             fail(err);
@@ -41,30 +38,35 @@ function retrieveDep(name) {
        }
         return modules[name];
 }
-function cage(name, dep, define, fail) {
+function cage(name, dep, define, fail, settings) {
     if (RE_PROVIDE.test(name)) {
         name = name.replace(RE_PROVIDE, '');
     } else {
         // this case represents a simple use
         // not a definition
+        settings = fail;
         fail = define;
         define = dep;
         dep = name;
         name = NIL;
     }
     var definition;
-    if (typeof dep === 'function') {
+    if (Array.isArray(dep)) {
+        dep = dep.map(retrieveDep);
+    } else if (typeof dep == 'string') {
+        dep = [retrieveDep(dep)];
+    } else {
+        settings = fail;
         fail = define;
         define = dep;
         dep = [];
-    } else if (Array.isArray(dep)) {
-        dep = dep.map(retrieveDep);
-    } else {
-        dep = [retrieveDep(dep)];
     }
+    var isDataDefinition = (settings||EMPTY).type == 'data';
     function defineModuleWith(deps) {
         try{
-            return define.apply(NIL, deps);
+            return (typeof define != 'function'
+                    || isDataDefinition)? define:
+                define.apply(NIL, deps);
         } catch(e) {
             console.error('Error while defining/executing module ' + (name? '"' + name + '" ': ''), e);
         }
@@ -73,9 +75,7 @@ function cage(name, dep, define, fail) {
     function definitionResolver(resolve, reject) {
         allDepsReady
             .then(defineModuleWith)
-            .then(function definitionResolve(definition) {
-                    resolve(definition);
-                })
+            .then(resolve)
             .or(reject);
     }
     if (name) {
@@ -89,6 +89,34 @@ function cage(name, dep, define, fail) {
             .or(createDepErrorHandler(fail));
     }
 }
+function provideExternal(name, definition) {
+    if (definition && Object.keys(definition).length) {
+        cage(
+                'provide:' + name,
+                definition,
+                function onNodeModuleFailed2(err) {
+                    console.error('Module "' + name + '" failed (2) to load with "module.require()"', err);
+                },
+                {type: 'data'})
+        .or(function onNodeModuleFailed(err) {
+            console.error('Module "' + name + '" failed to load with "module.require()"', err);
+        });
+    }
+}
+load = function defaultLoad(name) {
+    var definition;
+    try {
+        provideExternal(name, module.require('./' + name));
+    } catch(e) {
+        console.error(e);
+        try {
+            provideExternal(name, module.require('../../test/js/' + name));
+        } catch(e2) {
+            console.error(e2);
+            throw 'Failed to load module "' + name + '" with "module.require()"';
+        }
+    }
+};
 cage.setExternalLoad = setExternalLoad;
 if (module) {
     module.exports = cage;

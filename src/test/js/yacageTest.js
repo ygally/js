@@ -162,13 +162,13 @@ test('require calc', function(a) {
     );
 });
 
-test('after define then...', function(a) {
+test('after define then', function(a) {
     cage(
         'provide:square2',
-        ['multiplier'],
+        'multiplier',
         mul => (a => mul(a, a))
     ).then(function useSquare(sqr) {
         a.equals(sqr(3), 9, '3 au carré : 9');
         a.end();
-    }).or();
+    }).or(a.fail);
 });
