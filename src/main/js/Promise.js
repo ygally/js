@@ -92,8 +92,8 @@ var puid = Math.random()*1e4;
 puid = Math.round(puid);
 
 function Promise(cl, name) {
-var self = this;
-self.name = name;
+  var self = this;
+  self.name = name;
   // store state which can be
   // WAIT, YES or NO
   var state;
@@ -162,7 +162,9 @@ self.name = name;
 //      Prototype extensions
 // ####################
 var promProto = Promise.prototype;
-
+promProto.toString = function() {
+    return 'Promise {' + this.name + '}';
+};
 /**
 * Creates a trigger function.
 * If a transform function is given, the
