@@ -1,8 +1,6 @@
 /*global module*/
-var test = module.require('./test');
 var cage = module.require('../../main/js/yacage');
-//module.require('../../main/js/simpleFilters');
-cage('simpleFilters', function usingFilters(filterLib) {
+cage(['test', 'simpleFilters'], function usingFilters(test, filterLib) {
     test('simple filters', function(a) {
         var filters = filterLib;
         filters.create('matchA', o => o.name.indexOf('a') >= 0);
