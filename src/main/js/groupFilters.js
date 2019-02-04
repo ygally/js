@@ -1,7 +1,3 @@
-/*
-	 FIXME 004 : add support for intersection and union of filters index (for filters combinations)
-*/
-
 /*global module*/
 var cage = module.require('./yacage');
 cage(
@@ -9,8 +5,7 @@ cage(
 	       ['simpleFilters', 'arrays', 'sorts'],
 	       function groupFiltersDefinition(simpleFiltersLib, arrays, sorts) {
     var getter = arrays.getter,
-        comparator = sorts.comparator,
-	       	EMPTY = {},
+        EMPTY = {},
         NIL,
         managers = [],
 	   	    managerMap = {};
@@ -35,7 +30,6 @@ cage(
     	   this.getValue = getValue;
 	       this.values = [];
     	   this.index = NIL;
-	       this.isolated = NIL;
     }
 	   function buildManager(name, dbg) {
 	   	    name = name || 'manager-' + managers.length + '-' + (+new Date);
@@ -89,7 +83,7 @@ cage(
 	       	    return (groupMap[fGroup] || EMPTY).values;
 	       	}
 	       	function indexesFor(f) {
-	       	    return simpleFilters.indexesFor(f) || (rangeMap[f] || EMPTY).index;
+	       	    return simpleFilters.indexesFor(f);
 	       	}
 	       	function objectsFor(f) {
 	       	    return originalsFrom(indexesFor(f));
