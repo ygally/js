@@ -42,17 +42,20 @@ cage(
         }
 	       function names(prefix) {
 	       	    return simpleFilters.names(prefix);
-	       	}
+	       }
 	       function resetOneGroup(g) {
 	   	        g.values = [];
-	   	        names(g.name).forEach(simpleFilters.remove);
+	   	        names(g.name + ':').forEach(simpleFilters.remove);
 	       }
-	       function createByProperty(name, property) {
+	       function has(name) {
+	           return !!groupMap[name];
+	       }
+	       function create(name, property) {
 	       	    if (!name) {
-	       	        throw 'createByProperty(): need name for filter group';
+	       	        throw 'create(): need name for filter group';
 	       	    }
 	       	    if (groupMap[name]) {
-	       	        throw 'createByProperty(): filter group already exists for name "' + name + '"';
+	       	        throw 'create(): filter group already exists for name "' + name + '"';
 	       	    }
 	       	    var fGroup = new GroupOfFilters(name, property || name);
 	       	    groups.push(fGroup);
@@ -88,7 +91,8 @@ cage(
 	       var manager = {
 	       	    "name": name,
 	       	    "names": names,
-	       	    "byProperty": createByProperty,
+	       	    "create": create,
+	       	    //"has": has,
 	       	    "initWith": initWith,
 	       	    "valuesOf": valuesOf,
 	       	    "indexesFor": indexesFor,
@@ -98,7 +102,7 @@ cage(
 	       	managerMap[name] = manager;
 	       	return manager;
 	   }
-	   var mainInstance = buildManager('main');
+	   var mainInstance = buildManager('shared');
 	   mainInstance["build"] = buildManager;
 	   mainInstance["managers"] = function managerNames() {
 	       return Object.keys(managerMap);

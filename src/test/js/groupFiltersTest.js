@@ -7,10 +7,10 @@ cage(['test', 'groupFilters'], function usingFilters(test, groupFilterLib) {
 
     test('based on value filters', function(a) {
         var filters = groupFilterLib.build();
-        filters.byProperty('category');
-        filters.byProperty('age', 'years');
-        filters.byProperty('cute', o => o.isCute && o.isCute() || !1);
-        filters.byProperty('cap', o => o.name.charAt(0).toUpperCase());
+        filters.create('category');
+        filters.create('age', 'years');
+        filters.create('cute', o => o.isCute && o.isCute() || !1);
+        filters.create('cap', o => o.name.charAt(0).toUpperCase());
         var cats = [
             {name: 'Cuttie', category: 'Mau égyptien', years: 12, isCute: () => true},
             {name: 'Akira', category: 'Himalayen', years: 2},
@@ -33,8 +33,8 @@ cage(['test', 'groupFilters'], function usingFilters(test, groupFilterLib) {
 
     test('based on value filters (bis)', function(a) {
         var filters = groupFilterLib.build();
-        filters.byProperty('type');
-        filters.byProperty('faces');
+        filters.create('type');
+        filters.create('faces');
         var shapes = [
             {name: 'square', type: '2D', faces: 1},
             {name: 'triangle', type: '2D', faces: 1},
@@ -52,7 +52,7 @@ cage(['test', 'groupFilters'], function usingFilters(test, groupFilterLib) {
 
     test('init filters multiple times', function(a) {
         var filters = groupFilterLib.build();
-        filters.byProperty('color');
+        filters.create('color');
         var coins = [
             {name: 'c10', color: 'red'},
             {name: 'c20', color: 'red'},

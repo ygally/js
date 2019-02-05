@@ -46,6 +46,9 @@ cage('provide:simpleFilters', function simpleFiltersDefinition() {
             filters.push(f);
             filterMap[name] = f;
 	       }
+	       function has(name) {
+	           return !!filterMap[name];
+	       }
 	       function createIfNotExists(name, accept) {
 	           if (!filterMap[name]) {
 	           	    create(name, accept);
@@ -83,10 +86,11 @@ cage('provide:simpleFilters', function simpleFiltersDefinition() {
 	       	}
 	       var manager = {
 	       	    "name": name,
+	       	    "names": names,
 	       	    "create": create,
 	       	    "createIfNotExists": createIfNotExists,
+	       	    //"has": has,
 	       	    "remove": remove,
-	       	    "names": names,
 	       	    "initWith": initWith,
 	       	    "indexesFor": indexesFor,
 	       	    "objectsFor": objectsFor
@@ -95,7 +99,10 @@ cage('provide:simpleFilters', function simpleFiltersDefinition() {
 	       	managerMap[name] = manager;
 	       	return manager;
     }
-    var simpleFilters = buildManager('main');
-    simpleFilters["build"] = buildManager;
-    return simpleFilters;
+    var mainInstance = buildManager('shared');
+    mainInstance["build"] = buildManager;
+    mainInstance["managers"] = function managerNames() {
+	       return Object.keys(managerMap);
+	   };
+	   return mainInstance;
 });

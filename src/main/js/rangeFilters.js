@@ -1,7 +1,3 @@
-/*
-	 FIXME 004 : add support for intersection and union of filters index (for filters combinations)
-*/
-
 /*global module*/
 var cage = module.require('./yacage');
 cage(
@@ -57,13 +53,16 @@ cage(
         }
 	       function names(prefix) {
 	       	    return ranges.map(extractNameOf);
-	       	}
-	       function createRange(name, property) {
+	       }
+	       function has(name) {
+	           return !!rangeMap[name];
+	       }
+	       function create(name, property) {
 	       	    if (!name) {
-	       	        throw 'createRange(): need name for filter range';
+	       	        throw 'create(): need name for filter range';
 	       	    }
 	       	    if (rangeMap[name]) {
-	       	        throw 'createRange(): filter range already exists for name "' + name + '"';
+	       	        throw 'create(): filter range already exists for name "' + name + '"';
 	       	    }
             var fRange = new GroupOfFilters(name, property || name);
             ranges.push(fRange);
@@ -119,7 +118,8 @@ cage(
 	       var manager = {
 	       	    "name": name,
 	       	    "names": names,
-	       	    "create": createRange,
+	       	    "create": create,
+	       	    //"has": has,
 	       	    "initWith": initWith,
 	       	    "indexesFor": indexesFor,
 	       	    "objectsFor": objectsFor
@@ -128,7 +128,7 @@ cage(
 	       	managerMap[name] = manager;
 	       	return manager;
 	   }
-	   var mainInstance = buildManager('main');
+	   var mainInstance = buildManager('shared');
 	   mainInstance["build"] = buildManager;
 	   mainInstance["managers"] = function managerNames() {
 	       return Object.keys(managerMap);
