@@ -15,9 +15,6 @@ cage(
     function matches(prefix, text) {
         return prefix.test(text);
     }
-    function extractNameOf(object) {
-        return object.name;
-    }
     function isFunction(f) {
         return typeof f === 'function';
     }
