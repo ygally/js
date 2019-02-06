@@ -1,5 +1,6 @@
 /*global module*/
 var cage = module.require('../../main/js/yacage');
+module.require('../../main/js/yacage-nodeHelper');
 cage(['test', 'rangeFilters'], function usingFilters(test, rangeFilterLib) {
     test('range filters', function(a) {
         var rangeFilters = rangeFilterLib.build();

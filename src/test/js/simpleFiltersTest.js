@@ -1,5 +1,6 @@
 /*global module*/
 var cage = module.require('../../main/js/yacage');
+module.require('../../main/js/yacage-nodeHelper');
 cage(['test', 'simpleFilters'], function usingFilters(test, filterLib) {
     test('simple filters', function(a) {
         var filters = filterLib;

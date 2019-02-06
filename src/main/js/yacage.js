@@ -32,7 +32,7 @@ function createDepErrorHandler(fail) {
 function retrieveDep(name) {
     if (!modules[name]) {
         if (!downloads[name]) {
-            downloads[name] = Promise.resolve(load(name));
+            downloads[name] = Promise.resolve(load(name, modules));
         }
         return downloads[name]
             .then(function afterDL() {
@@ -94,50 +94,8 @@ function cage(name, dep, define, fail, settings) {
             .or(createDepErrorHandler(fail));
     }
 }
-function provideExternal(name, definition) {
-    //console.log('providing Def for', name,
-       //     '[', (definition && Object.keys(definition).length ||0),
-       //     'props ; already exists?',!!modules[name], '] :', definition);
-    if (!modules[name] && definition && (Object.keys(definition).length || isFunction(definition))) {
-        //console.log('got def :', definition);
-        cage(
-            'provide:' + name,
-            new Promise(resolve => resolve(definition)),
-            function onNodeModuleFailed2(err) {
-                console.error('Module "' + name + '" failed (2) to load with "module.require()"', err);
-               
-            })
-        .or(function onNodeModuleFailed(err) {
-            console.error('Module "' + name + '" failed to load with "module.require()"', err);
-        });
-    }
-}
-function defineViaRequire(name) {
-    try {
-        return module.require('./' + name);
-    } catch(e) {
-        if (('' + e).indexOf('Cannot find module')<0) {
-            console.info(e);
-        }
-        try {
-        	   return module.require('../../main/js/' + name);
-        } catch(e2) {
-            if (('' + e2).indexOf('Cannot find module')<0) {
-                console.info(e2);
-            }
-            try {
-            	   return module.require('../../test/js/' + name);
-            } catch(e3) {
-                if (('' + e3).indexOf('Cannot find module')<0) {
-                    console.info(e3);
-                }
-                throw 'Failed to load module "' + name + '" with "module.require()" [' + e + '] [' + e2 + '] [' + e3 + ']' ;
-            }
-        }
-    }
-}
 load = function defaultLoad(name) {
-    provideExternal(name, defineViaRequire(name));
+    throw 'No external loading is defined [module "' + name + '" not found]';
 };
 cage.setExternalLoad = setExternalLoad;
 if (module) {

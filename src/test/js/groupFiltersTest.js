@@ -1,5 +1,6 @@
 /*global module*/
 var cage = module.require('../../main/js/yacage');
+module.require('../../main/js/yacage-nodeHelper');
 cage(['test', 'groupFilters'], function usingFilters(test, groupFilterLib) {
     function numerically(a, b) {
         return Math.sign(a-b);
