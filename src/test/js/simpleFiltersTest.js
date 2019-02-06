@@ -15,6 +15,7 @@ cage(['test', 'simpleFilters'], function usingFilters(test, filterLib) {
         a.equals(filters.indexesFor('matchA').join("_"), "0");
         a.equals(filters.indexesFor('matchE').join("_"), "1_2");
         a.equals(filters.objectsFor('matchR').map(o=>o.name).join("_"), "spray_present");
+        a.equals(filterLib.managers().sort().join(";"), "shared");
         a.end();
     });
 });
