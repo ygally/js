@@ -1,14 +1,10 @@
 /*global module*/
-var test = module.require('./test');
 var cage = module.require('../../main/js/yacage');
+cage(['test', 'filters'], function usingFilters(test, filterLib) {
+    function numerically(a, b) {
+        return Math.sign(a-b);
+    }
 
-module.require('../../main/js/filters');
-
-function numerically(a, b) {
-    return Math.sign(a-b);
-}
-
-cage(['filters'], function usingFilters(filterLib) {
     test('simple filters', function(a) {
         var filters = filterLib;
         filters.create('matchA', o => o.name.indexOf('a') >= 0);
@@ -27,7 +23,7 @@ cage(['filters'], function usingFilters(filterLib) {
     });
 
     test('based on value filters', function(a) {
-        var filters = filterLib.newInstance();
+        var filters = filterLib.build();
         filters.byProperty('category');
         filters.byProperty('age', 'years');
         filters.byProperty('cute', o => o.isCute && o.isCute() || !1);
@@ -53,7 +49,7 @@ cage(['filters'], function usingFilters(filterLib) {
     });
 
     test('standalone filters', function(a) {
-        var filters = filterLib.newInstance();
+        var filters = filterLib.build('forTest');
         filters.byProperty('type');
         filters.byProperty('faces');
         var shapes = [
@@ -67,13 +63,13 @@ cage(['filters'], function usingFilters(filterLib) {
         var expectedNames = 'faces:1;faces:5;faces:6';
         expectedNames += ';type:2D;type:3D';
         a.equals(filters.names().sort().join(";"), expectedNames);
-        a.equals(filterLib.managers().sort().join(";").substring(0,15), "main;manager-1-");
+        a.equals(filterLib.managers().sort().join(";").indexOf("forTest")>=0, true);
         a.equals(filters.objectsFor('type:2D').map(o=>o.name).sort().join("_"), "square_triangle");
     	   a.end();
     });
 
     test('init filters multiple times', function(a) {
-        var filters = filterLib.newInstance();
+        var filters = filterLib.build();
         filters.create('E', o => o.name.charAt(0) == 'e');
         filters.byProperty('color');
         var coins = [
@@ -92,7 +88,7 @@ cage(['filters'], function usingFilters(filterLib) {
     });
 
     test('range filters', function(a) {
-        var filters = filterLib.newInstance();
+        var filters = filterLib.build();
         filters.createRange('number', o => +o.name.charAt(1));
         var coins = [
             {name: 'c20', color: 'red'},
