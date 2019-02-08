@@ -5,7 +5,10 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
     function numerically(a, b) {
         return Math.sign(a-b);
     }
-
+    test('testWarmer', a => {
+        a.equals("Hello", 'Hello');
+        a.equals("World", 'World');
+    });
     test('simple filters', function(a) {
         var filters = filterLib;
         filters.create('matchA', o => o.name.indexOf('a') >= 0);
@@ -22,7 +25,6 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         a.equals(filters.objectsFor('matchR').map(o=>o.name).join("_"), "spray_present");
         a.end();
     });
-
     test('based on value filters', function(a) {
         var filters = filterLib.build();
         filters.byProperty('category');
@@ -48,7 +50,6 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         a.equals(filters.objectsFor('category:Mau égyptien').map(o=>o.name).sort().join("_"), "Alex_Cuttie");
     	   a.end();
     });
-
     test('standalone filters', function(a) {
         var filters = filterLib.build('forTest');
         filters.byProperty('type');
@@ -68,7 +69,6 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         a.equals(filters.objectsFor('type:2D').map(o=>o.name).sort().join("_"), "square_triangle");
     	   a.end();
     });
-
     test('init filters multiple times', function(a) {
         var filters = filterLib.build();
         filters.create('E', o => o.name.charAt(0) == 'e');
@@ -87,7 +87,6 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         a.equals(filters.names().sort().join(";"), 'E;color:grey;color:red');
     	   a.end();
     });
-
     test('range filters', function(a) {
         var filters = filterLib.build();
         filters.createRange('number', o => +o.name.charAt(1));
@@ -107,7 +106,6 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         a.equals(filters.indexesFor('number').between(1).and(3).join(','), '1,0');
     	   a.end();
     });
-
     function Product(name, type, sugar, weight, price) {
         this.name = name;
         this.type = type;
@@ -115,36 +113,62 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         this.weight= weight;
         this.price = price;
     }
-    
     function $p(n,t,s,v,p) {
         return new Product(n,t,s,v,p);
     }
     var p_discreet_props = ['name', 'type'];
     var p_range_props = ['sugar', 'weight', 'price'];
     var SOLID_OR_CREAM = ['type:solid', 'type:cream'];
-    
-    test('union of filters', function(a) {
-        var filters = filterLib.build();
-        p_discreet_props.forEach(p=>filters.byProperty(p));
-        p_range_props.forEach(p=>filters.createRange(p));
-        filters.byProperty('letter', o=>o.name.charAt(0).toUpperCase());
-        var products = [
+    var PRODUCTS = [
             $p('milk','liquid', 0.02, 1.2, 0.92),
             $p('Frosties','solid', 0.6, 0.8, 4.6),
             $p('Nutella','cream', 0.7, 0.75, 5.7),
             $p('flour','powder', 0.03, 1.2, 1.45),
             $p('juice','liquid', 0.14, 1, 1.2),
             $p('soup','liquid', 0.08, 1.2, 2.65),
-            $p('bread','solid', 0.09, 0.75, 1.1)
+            $p('bread','solid', 0.09, 0.75, 1.1),
+            $p('iced tea','liquid', 0.125, 1.5, 1.32)
         ];
-        filters.initWith(products);
-        a.equals(filters.names('letter').map(n=>n.substr(7)).join(";"), 'M;F;N;J;S;B');
+        
+    test('union of filters', function(a) {
+        var filters = filterLib.build();
+        p_discreet_props.forEach(p=>filters.byProperty(p));
+        p_range_props.forEach(p=>filters.createRange(p));
+        filters.byProperty('letter', o=>o.name.charAt(0).toUpperCase());
+        filters.initWith(PRODUCTS);
+        a.equals(filters.names('letter')
+            .map(n=>n.substr(7)).join(";"),
+            'M;F;N;J;S;B;I');
         a.equals(filters.indexesFor(SOLID_OR_CREAM)
-            .map(i=>products[i].name).sort().join(','),
+            .map(i=>PRODUCTS[i].name).sort().join(','),
             'Frosties,Nutella,bread');
         a.equals(filters.indexesFor('letter:F', 'letter:J')
-            .map(i=>products[i].name).sort().join(','),
+            .toOriginals()
+            .map(p=>p.name).sort().join(','),
             'Frosties,flour,juice');
+    	   a.end();
+    });
+    test('intersection of filters', function(a) {
+        var filters = filterLib.build();
+        p_discreet_props.forEach(p=>filters.byProperty(p));
+        p_range_props.forEach(p=>filters.createRange(p));
+        filters.byProperty('letter', o=>o.name.charAt(0).toUpperCase());
+        filters.initWith(PRODUCTS);
+        a.equals(filters.indexesFor(['letter:M', 'letter:I'])
+            .and('type:liquid')
+            .toOriginals()
+            .map(p=>p.name).sort().join(','),
+            'iced tea,milk');
+        a.equals(filters.indexesFor('letter:F')
+            .and(['type:powder'])
+            .toOriginals()
+            .map(p=>p.name).sort().join(','),
+            'flour');
+        a.equals(filters.indexesFor(['letter:J'])
+            .and(['type:liquid', 'type:solid'])
+            .toOriginals()
+            .map(p=>p.name).sort().join(','),
+            'juice');
     	   a.end();
     });
 });

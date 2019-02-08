@@ -11,7 +11,9 @@ cage(
 	   	var managers = [],
 	   	    managerMap = {},
 	   	    union = arrays.union,
-	   	    cross = arrays.intersection,
+	   	    intersection = arrays.intersection,
+	   	    isArray = Array.isArray,
+	   	    forEach = [].forEach,
 	   	    map = [].map,
 	   	    NIL;
 	   function buildManager(name, dbg) {
@@ -42,7 +44,7 @@ cage(
 	       	        }
 	       	    };
 	       	}
-	       	function wrapWithExistenceChecker(create) {
+	       	function uniq(create) {
 	       	    return function createIfNotExist(name, settings) {
 	       	        libs.forEach(throwIfHas(name));
 	       	        create(name, settings)
@@ -54,32 +56,48 @@ cage(
 	       	    groups.initWith(objects);
 	       	    ranges.initWith(objects);
 	       	}
-	       	function indexesFor(f) {
+	       	function indexesForOne(f) {
 	       	    return simples.indexesFor(f)
 	       	        || groups.indexesFor(f)
 	       	        || ranges.indexesFor(f);
 	       }
 	       function indexesUnion(names) {
-	       	    return map.call(names, indexesFor)
+	       	    return map.call(names, indexesForOne)
 	       	        .reduce(union);
 	       }
-	       function indexesForAll(filters) {
-	           return Array.isArray(filters)?
-	               indexesUnion(filters):
-	               indexesUnion(arguments);
+	       function ifArray(array, other) {
+	           return isArray(array)?
+	               array: other;
 	       }
-	       function objectsFor(f) {
-	           return originalsFrom(indexesFor(f));
+	       function chain(indexes) {
+	           if (indexes) {
+	               indexes.and = function intersectionWith(others) {
+	                   others = indexesUnion(ifArray(others, arguments));
+	                   return chain(intersection(indexes, others));
+	               };
+	               indexes.toOriginals = function indexesToOriginals() {
+	                   return originalsFrom(indexes);
+	               };
+	           }
+	           return indexes;
+	       }
+	       function indexesFor(filters) {
+	           var indexes = indexesUnion(ifArray(filters, arguments));
+	           return chain(indexes);
+	       }
+	       function objectsFor(filters) {
+	           var indexes = indexesUnion(ifArray(filters, arguments));
+	           return originalsFrom(indexes);
 	       }
 	       var manager = {
 	       	    "name": name,
 	       	    "names": names,
-	       	    "create": wrapWithExistenceChecker(simples.create),
-	       	    "byProperty": wrapWithExistenceChecker(groups.create),
-	       	    "createRange": wrapWithExistenceChecker(ranges.create),
+	       	    "create": uniq(simples.create),
+	       	    "byProperty": uniq(groups.create),
+	       	    "createRange": uniq(ranges.create),
 	       	    "initWith": initWith,
 	       	    "valuesOf": groups.valuesOf,
-	       	    "indexesFor": indexesForAll,
+	       	    "indexesFor": indexesFor,
 	       	    "objectsFor": objectsFor
 	       	};
 	       	managers.push(manager);
