@@ -18,6 +18,10 @@ function intersection(A, B) {
 function union(A, B) {
     return A.concat(B.filter(missing.from(A)));
 }
+function replaceIn(arr, nxt) {
+	   arr.splice.apply(arr, [0, arr.length].concat(nxt));
+	   return arr;
+}
 function getter(prop, obj) {
     return obj[prop];
 }
@@ -91,6 +95,7 @@ if (module) {
     module.exports = {
 	       intersection: intersection,
 	       union: union,
+	       replaceIn: replaceIn,
 	       getter: getter,
 	       isolator: isolator,
 	       massIsolator: massIsolator,

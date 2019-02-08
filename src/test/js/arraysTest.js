@@ -3,12 +3,17 @@ var test = module.require('./test'),
     sorts = module.require('../../main/js/sorts'),
     arrays = module.require('../../main/js/arrays'),
     comparator = sorts.comparator,
+    replaceIn = arrays.replaceIn,
     getter = arrays.getter,
     isolator = arrays.isolator,
     binarySearch = arrays.binarySearch,
     massIsolator = arrays.massIsolator,
     NIL;
 
+test('testWarmer', a => {
+    a.equals("Hello", 'Hello');
+    a.equals("World", 'World');
+});
 test('numeric intersections', function(a) {
     var inter = arrays.intersection;
     a.equals(inter([42, 43],[42]).join("_"), "42");
@@ -29,7 +34,18 @@ test('numeric union', function(a) {
     a.equals(union([], [5]).join(), "5");
     a.end();
 });
-
+test('replace into array', function(a) {
+    var initial = [2,4,12];
+    replaceIn(initial,[36,8,5,9]);
+    a.equals(initial.join("_"), "36_8_5_9");
+    a.equals(replaceIn([42, 43],[42]).join("_"), "42");
+    a.equals(replaceIn([1,3,4,5],[2,4]).join("_"), "2_4");
+    a.equals(replaceIn([1,14],[5,6,8]).join(","), "5,6,8");
+    a.equals(replaceIn([4, 3],[]).join(','), "");
+    a.equals(replaceIn([],[]).join(), "");
+    a.equals(replaceIn([], [5]).join(), "5");
+    a.end();
+});
 function Color(name, code) {
     this.name = name;
     this.color = code;
