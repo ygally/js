@@ -12,6 +12,7 @@ cage(
 	   	    managerMap = {},
 	   	    union = arrays.union,
 	   	    cross = arrays.intersection,
+	   	    map = [].map,
 	   	    NIL;
 	   function buildManager(name, dbg) {
 	   	    name = name || 'manager-' + managers.length + '-' + (+new Date);
@@ -59,8 +60,13 @@ cage(
 	       	        || ranges.indexesFor(f);
 	       }
 	       function indexesUnion(names) {
-	       	    return names.map(indexesFor)
+	       	    return map.call(names, indexesFor)
 	       	        .reduce(union);
+	       }
+	       function indexesForAll(filters) {
+	           return Array.isArray(filters)?
+	               indexesUnion(filters):
+	               indexesUnion(arguments);
 	       }
 	       function objectsFor(f) {
 	           return originalsFrom(indexesFor(f));
@@ -73,8 +79,7 @@ cage(
 	       	    "createRange": wrapWithExistenceChecker(ranges.create),
 	       	    "initWith": initWith,
 	       	    "valuesOf": groups.valuesOf,
-	       	    "indexesFor": indexesFor,
-	       	    "unionOf": indexesUnion,
+	       	    "indexesFor": indexesForAll,
 	       	    "objectsFor": objectsFor
 	       	};
 	       	managers.push(manager);

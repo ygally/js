@@ -139,9 +139,12 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         ];
         filters.initWith(products);
         a.equals(filters.names('letter').map(n=>n.substr(7)).join(";"), 'M;F;N;J;S;B');
-        a.equals(filters.unionOf(SOLID_OR_CREAM)
+        a.equals(filters.indexesFor(SOLID_OR_CREAM)
             .map(i=>products[i].name).sort().join(','),
             'Frosties,Nutella,bread');
+        a.equals(filters.indexesFor('letter:F', 'letter:J')
+            .map(i=>products[i].name).sort().join(','),
+            'Frosties,flour,juice');
     	   a.end();
     });
 });
