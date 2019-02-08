@@ -6,10 +6,13 @@
 var cage = module.require('./yacage');
 cage(
         'provide:filters',
-        ['simpleFilters', 'groupFilters', 'rangeFilters'],
-        function filtersDefinition(simpleFLib, groupFLib, rangeFLib) {
+        ['arrays', 'simpleFilters', 'groupFilters', 'rangeFilters'],
+        function filtersDefinition(arrays, simpleFLib, groupFLib, rangeFLib) {
 	   	var managers = [],
-	   	    managerMap = {};
+	   	    managerMap = {},
+	   	    union = arrays.union,
+	   	    cross = arrays.intersection,
+	   	    NIL;
 	   function buildManager(name, dbg) {
 	   	    name = name || 'manager-' + managers.length + '-' + (+new Date);
 	   	    var simples = simpleFLib.build(name + '_spl', dbg),
@@ -54,10 +57,14 @@ cage(
 	       	    return simples.indexesFor(f)
 	       	        || groups.indexesFor(f)
 	       	        || ranges.indexesFor(f);
-	       	}
-	       	function objectsFor(f) {
-	       	    return originalsFrom(indexesFor(f));
-	       	}
+	       }
+	       function indexesUnion(names) {
+	       	    return names.map(indexesFor)
+	       	        .reduce(union);
+	       }
+	       function objectsFor(f) {
+	           return originalsFrom(indexesFor(f));
+	       }
 	       var manager = {
 	       	    "name": name,
 	       	    "names": names,
@@ -67,6 +74,7 @@ cage(
 	       	    "initWith": initWith,
 	       	    "valuesOf": groups.valuesOf,
 	       	    "indexesFor": indexesFor,
+	       	    "unionOf": indexesUnion,
 	       	    "objectsFor": objectsFor
 	       	};
 	       	managers.push(manager);
