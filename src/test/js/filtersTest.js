@@ -87,23 +87,50 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         a.equals(filters.names().sort().join(";"), 'E;color:grey;color:red');
     	   a.end();
     });
+    var COINS = [
+        {name: 'c20', color: 'red', size: .8},
+        {name: 'c10', color: 'red', size: .7},
+        {name: 'c50', color: 'red', size: 1.07},
+        {name: 'e1', color: 'grey', size: 1},
+        {name: 'e2', color: 'grey', size: 1.1}
+    ];
+    function initial(coin) {
+        return coin.name.charAt(0);
+    }
+    function euroValue(o) {
+        return initial(o) == 'c'?
+            +o.name.charAt(1)/10:
+            +o.name.charAt(1)
+    }
     test('range filters', function(a) {
         var filters = filterLib.build();
-        filters.createRange('number', o => +o.name.charAt(1));
-        var coins = [
-            {name: 'c20', color: 'red'},
-            {name: 'c10', color: 'red'},
-            {name: 'c50', color: 'red'}
-        ];
-        filters.initWith(coins);
+        filters.createRange('number', euroValue);
+        filters.initWith(COINS);
         a.equals(filters.names().join(";"), 'number');
-        a.equals(filters.indexesFor('number').join(','), '1,0,2');
-        a.equals(filters.indexesFor('number').before(5).join(','), '1,0');
-        a.equals(filters.indexesFor('number').max(5).join(','), '1,0,2');
-        a.equals(filters.indexesFor('number').after(2).join(','), '2');
-        a.equals(filters.indexesFor('number').min(2).join(','), '0,2');
-        a.equals(filters.indexesFor('number').between(2, 4).join(','), '0');
-        a.equals(filters.indexesFor('number').between(1).and(3).join(','), '1,0');
+        a.equals(filters.indexesFor('number').join(','), '1,0,2,3,4');
+        a.equals(filters.indexesFor('number').before(.5).join(','), '1,0');
+        a.equals(filters.indexesFor('number').max(.5).join(','), '1,0,2');
+        a.equals(filters.indexesFor('number').after(.2).join(','), '2,3,4');
+        a.equals(filters.indexesFor('number').min(.2).join(','), '0,2,3,4');
+        a.equals(filters.indexesFor('number').between(.2, .4).join(','), '0');
+        a.equals(filters.indexesFor('number').between(.1).and(.3).join(','), '1,0');
+    	   a.end();
+    });
+    test('multiple creation', function(a) {
+        var filters = filterLib.build();
+        filters.createRange([
+            {name:'number', property:euroValue},
+            {name:'size'}
+        ]);
+        filters.initWith(COINS);
+        a.equals(filters.names().sort().join(";"), 'number;size');
+        a.equals(filters.indexesFor('size').join(','), '1,0,3,2,4');
+        a.equals(filters.indexesFor('number').before(.4).join(','), '1,0');
+        a.equals(filters.indexesFor('number').max(.5).join(','), '1,0,2');
+        a.equals(filters.indexesFor('size').after(1).join(','), '2,4');
+        a.equals(filters.indexesFor('size').min(.8).join(','), '0,3,2,4');
+        a.equals(filters.indexesFor('number').between(.2, .4).join(','), '0');
+        a.equals(filters.indexesFor('number').between(.1).and(.3).join(','), '1,0');
     	   a.end();
     });
     function Product(name, type, sugar, weight, price) {
@@ -129,7 +156,6 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
             $p('bread','solid', 0.09, 0.75, 1.1),
             $p('iced tea','liquid', 0.125, 1.5, 1.32)
         ];
-        
     test('union of filters', function(a) {
         var filters = filterLib.build();
         p_discreet_props.forEach(p=>filters.byProperty(p));

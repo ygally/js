@@ -37,17 +37,42 @@ cage(
 	       	    }
 	       	    return list.concat(ranges.names(prefix));
 	       	}
-	       	function throwIfHas(name) {
-	       	    return function throwIf(lib, name) {
-	       	        if (typeof lib.has === 'function' && lib.has(name)) {
-	       	            throw 'Lib "' + Lib.name + '" already has that filter : ' + name;
-	       	        }
-	       	    };
-	       	}
-	       	function uniq(create) {
-	       	    return function createIfNotExist(name, settings) {
-	       	        libs.forEach(throwIfHas(name));
-	       	        create(name, settings)
+	       	function ifArray(array, other) {
+	           return isArray(array)?
+	               array: other;
+	       }
+	       function throwIfHas(name) {
+	           return function throwIf(lib, name) {
+	               if (typeof lib.has === 'function' && lib.has(name)) {
+	                   throw 'Lib "' + Lib.name + '" already has that filter : ' + name;
+	               }
+	           };
+	       }
+	       function uniq(create) {
+	           return function createIfNotExist(name, settings) {
+	               libs.forEach(throwIfHas(name));
+	               create(name, settings)
+	           };
+	       }
+	       function confToParams(conf) {
+	           return [
+	               conf.name,
+	               conf.accept || conf.property
+	          ];
+	       }
+	       function fromConf(create) {
+	           return function createFromConf(conf) {
+	               create.apply(NIL, confToParams(conf));
+	           };
+	       }
+	       function multiple(create) {
+	           var createFromConf = fromConf(create);
+	           return function createMultiple(filters) {
+	               if (isArray(filters)) {
+	                   filters.forEach(createFromConf);
+	               } else {
+	                   create.apply(NIL, arguments);
+	               }
 	       	    };
 	       	}
 	       function initWith(objects) {
@@ -64,10 +89,6 @@ cage(
 	       function indexesUnion(names) {
 	       	    return map.call(names, indexesForOne)
 	       	        .reduce(union);
-	       }
-	       function ifArray(array, other) {
-	           return isArray(array)?
-	               array: other;
 	       }
 	       function chain(indexes) {
 	           if (indexes) {
@@ -92,9 +113,9 @@ cage(
 	       var manager = {
 	       	    "name": name,
 	       	    "names": names,
-	       	    "create": uniq(simples.create),
-	       	    "byProperty": uniq(groups.create),
-	       	    "createRange": uniq(ranges.create),
+	       	    "create": multiple(uniq(simples.create)),
+	       	    "byProperty": multiple(uniq(groups.create)),
+	       	    "createRange": multiple(uniq(ranges.create)),
 	       	    "initWith": initWith,
 	       	    "valuesOf": groups.valuesOf,
 	       	    "indexesFor": indexesFor,
