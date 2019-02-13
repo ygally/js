@@ -9,43 +9,89 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         a.equals("Hello", 'Hello');
         a.equals("World", 'World');
     });
-    test('simple filters', function(a) {
-        var filters = filterLib;
-        filters.create('matchA', o => o.name.indexOf('a') >= 0);
-        filters.create('matchE', o => o.name.indexOf('e') >= 0);
-        filters.create('matchR', o => o.name.indexOf('r') >= 0);
-        var objects = [
+    function has(letter) {
+        return o => o.name.indexOf(letter) >= 0;
+    }
+    var OBJECTS = [
             {name: 'spray'},
             {name: 'elite'},
             {name: 'present'}
         ];
-    	   filters.initWith(objects);
+    test('simple filters', function(a) {
+        var filters = filterLib;
+        filters.create('matchA', has('a'));
+        filters.create('matchE', has('e'));
+        filters.create('matchR', has('r'));
+        filters.initWith(OBJECTS);
         a.equals(filters.indexesFor('matchA').join("_"), "0");
         a.equals(filters.indexesFor('matchE').join("_"), "1_2");
         a.equals(filters.objectsFor('matchR').map(o=>o.name).join("_"), "spray_present");
         a.end();
     });
-    test('based on value filters', function(a) {
+    test('mult. simple filters', function(a) {
+        var filters = filterLib.build();
+        filters.create('a,e,r,p,s,t,i'
+            .split(',').map(l => ({
+                name: 'match' + l.toUpperCase(),
+                accept: has(l)
+            })));
+        filters.initWith(OBJECTS);
+        a.equals(filters.indexesFor('matchA').join("_"), "0");
+        a.equals(filters.indexesFor('matchE').join("_"), "1_2");
+        a.equals(filters.indexesFor('matchR').join("_"), "0_2");
+        a.equals(filters.indexesFor('matchP').join("_"), "0_2");
+        a.equals(filters.indexesFor('matchS').join("_"), "0_2");
+        a.equals(filters.indexesFor('matchT').join("_"), "1_2");
+        a.equals(filters.objectsFor('matchI').map(o=>o.name).join("_"), "elite");
+        a.end();
+    });
+    function Cat(name, category, years, isCute) {
+        this.name = name;
+        this.category = category;
+        this.years = years;
+        this.isCute = isCute;
+    }
+    function $c(n,c,y,i) {
+        return new Cat(n,c,y,i);
+    }
+    var CATS = [
+            $c('Cuttie', 'Mau égyptien', 12, () => true),
+            $c('Akira', 'Himalayen', 2),
+            $c('Chewbacca', 'Siamois', 4),
+            $c('Alex', 'Mau égyptien', 1, () => true),
+            $c('Mioumiou', 'Himalayen', 4, () => true)
+        ];
+    test('prop filters', function(a) {
         var filters = filterLib.build();
         filters.byProperty('category');
         filters.byProperty('age', 'years');
         filters.byProperty('cute', o => o.isCute && o.isCute() || !1);
         filters.byProperty('cap', o => o.name.charAt(0).toUpperCase());
-        var cats = [
-            {name: 'Cuttie', category: 'Mau égyptien', years: 12, isCute: () => true},
-            {name: 'Akira', category: 'Himalayen', years: 2},
-            {name: 'Chewbacca', category: 'Siamois', years: 4},
-            {name: 'Alex', category: 'Mau égyptien', years: 4, isCute: () => true},
-            {name: 'Mioumiou', category: 'Himalayen', years: 4, isCute: () => true}
-        ];
-        filters.initWith(cats);
-        var expectedNames = 'age:12;age:2;age:4';
+        filters.initWith(CATS);
+        var expectedNames = 'age:1;age:12;age:2;age:4';
         expectedNames += ';cap:A;cap:C;cap:M';
         expectedNames += ';category:Himalayen;category:Mau égyptien;category:Siamois';
         expectedNames += ';cute:false;cute:true';
         a.equals(filters.names().sort().join(";"), expectedNames);
         a.equals(filters.valuesOf('category').sort().join(";"), "Himalayen;Mau égyptien;Siamois");
-        a.equals(filters.valuesOf('age').sort(numerically).join(";"), '2;4;12');
+        a.equals(filters.valuesOf('age').sort(numerically).join(";"), '1;2;4;12');
+        a.equals(filters.indexesFor('category:Siamois').join("_"), "2");
+        a.equals(filters.objectsFor('category:Mau égyptien').map(o=>o.name).sort().join("_"), "Alex_Cuttie");
+    	   a.end();
+    });
+    var cat_discreet_props = [
+        {name: 'category'},
+        {name: 'age', property: c => c.years + ' an' + (c.years>1? 's':'')}
+    ];
+    test('multiple prop filters', function(a) {
+        var filters = filterLib.build();
+        filters.byProperty(cat_discreet_props);
+        filters.initWith(CATS);
+        var expectedNames = 'age:1 an;age:12 ans;age:2 ans;age:4 ans';
+        expectedNames += ';category:Himalayen;category:Mau égyptien;category:Siamois';
+        a.equals(filters.names().sort().join(";"), expectedNames);
+        a.equals(filters.valuesOf('category').sort().join(";"), "Himalayen;Mau égyptien;Siamois");
+        a.equals(filters.valuesOf('age').sort().join(";"), '1 an;12 ans;2 ans;4 ans');
         a.equals(filters.indexesFor('category:Siamois').join("_"), "2");
         a.equals(filters.objectsFor('category:Mau égyptien').map(o=>o.name).sort().join("_"), "Alex_Cuttie");
     	   a.end();
@@ -69,7 +115,7 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
         a.equals(filters.objectsFor('type:2D').map(o=>o.name).sort().join("_"), "square_triangle");
     	   a.end();
     });
-    test('init filters multiple times', function(a) {
+    test('many inits of filters', function(a) {
         var filters = filterLib.build();
         filters.create('E', o => o.name.charAt(0) == 'e');
         filters.byProperty('color');
@@ -174,7 +220,7 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
             'Frosties,flour,juice');
     	   a.end();
     });
-    test('intersection of filters', function(a) {
+    test('intersect° of filters', function(a) {
         var filters = filterLib.build();
         p_discreet_props.forEach(p=>filters.byProperty(p));
         p_range_props.forEach(p=>filters.createRange(p));
