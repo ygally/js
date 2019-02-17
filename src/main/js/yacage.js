@@ -22,38 +22,35 @@ function isFunction(f) {
 function setExternalLoad(extLoad) {
     load = extLoad;
 }
-function createDepErrorHandler(fail) {
-    return fail? function handleDepError(err) {
-            fail(err);
-        }: function handleDepError(err) {
-            throw 'Dependency Error: ' + err;
-        };
+function handleDepError(err) {
+    throw 'Dependency Error: ' + err;
+}
+function has(moduleName) {
+    return !!modules[moduleName];
 }
 function retrieveDep(name) {
     if (!modules[name]) {
+        function returnModule() {
+            return modules[name];
+        }
         if (!downloads[name]) {
-            downloads[name] = Promise.resolve(load(name, modules));
+            downloads[name] = Promise.resolve(load(name));
         }
         return downloads[name]
-            .then(function afterDL() {
-                return modules[name];
-            }).or(createDepErrorHandler());
+            .then(returnModule, handleDepError);
     }
     return modules[name];
 }
-function cage(name, dep, define, fail, settings) {
+function cage(name, dep, define, fail) {
     if (RE_PROVIDE.test(name)) {
         name = name.replace(RE_PROVIDE, '');
-        //console.log('try to provide '+name);
     } else {
         // this case represents a simple use
         // not a definition
-        settings = fail;
         fail = define;
         define = dep;
         dep = name;
         name = NIL;
-        //console.log('using deps :', dep);
     }
     var definition;
     if (Array.isArray(dep)) {
@@ -61,14 +58,11 @@ function cage(name, dep, define, fail, settings) {
     } else if (typeof dep == 'string') {
         dep = [retrieveDep(dep)];
     } else {
-        settings = fail;
         fail = define;
         define = dep;
         dep = [];
     }
-    //console.log('deps promises :', dep);
     function defineModuleWith(deps) {
-        //console.log('resolved deps :', deps);
         try{
             return isFunction(define)?
                 define.apply(NIL, deps): define;
@@ -76,12 +70,11 @@ function cage(name, dep, define, fail, settings) {
             console.error('Error while defining/executing module ' + (name? '"' + name + '" ': ''), e);
         }
     }
-    var allDepsReady = Promise.all(dep, 'all_' + name + '_deps');
+    var allDepsReady = Promise.all(dep, 'all_' + (name||'') + '_deps');
     function definitionResolver(resolve, reject) {
         allDepsReady
             .then(defineModuleWith)
-            .then(resolve)
-            .or(reject);
+            .then(resolve, reject);
     }
     if (name) {
         if (modules[name]) {
@@ -91,12 +84,13 @@ function cage(name, dep, define, fail, settings) {
     } else {
         return allDepsReady
             .then(defineModuleWith)
-            .or(createDepErrorHandler(fail));
+            .or(handleDepError);
     }
 }
 load = function defaultLoad(name) {
     throw 'No external loading is defined [module "' + name + '" not found]';
 };
+cage.has = has;
 cage.setExternalLoad = setExternalLoad;
 if (module) {
     module.exports = cage;

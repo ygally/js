@@ -3,11 +3,11 @@ cage = module.require('./yacage');
 function isFunction(f) {
     return typeof f == 'function';
 }
-function provideExternal(name, definition, moduleMap) {
+function provideExternal(name, definition) {
     //console.log('providing Def for', name,
        //     '[', (definition && Object.keys(definition).length ||0),
        //     'props ; already exists?',!!moduleMap[name], '] :', definition);
-    if (!moduleMap[name] && definition && (Object.keys(definition).length || isFunction(definition))) {
+    if (!cage.has(name) && definition && (Object.keys(definition).length || isFunction(definition))) {
         //console.log('got def :', definition);
         cage(
             'provide:' + name,
@@ -45,10 +45,7 @@ function defineViaRequire(name) {
         }
     }
 }
-function loadViaRequire(name, moduleMap) {
-    if (typeof moduleMap !== 'object') {
-        throw 'Cannot find module list [module "' + name + '" cannot be loaded correctly]';
-    }
-    provideExternal(name, defineViaRequire(name), moduleMap);
+function loadViaRequire(name) {
+    provideExternal(name, defineViaRequire(name));
 }
 cage.setExternalLoad(loadViaRequire);

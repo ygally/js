@@ -59,7 +59,7 @@ test('require adder', function(a) {
         });
 });
 
-test('verify double provide fail', a=>{
+test('verify dble provide', a=>{
     cage(
         'provide:adder',
         function addDefine() {
@@ -76,7 +76,7 @@ test('verify double provide fail', a=>{
     });
 });
 
-test('require substract twice', function(a) {
+test('req.twice w/ persistence', function(a) {
     var t0 = +new Date;
     cage('substract', function simpleRemove(sub) {
         var t1 = +new Date;
