@@ -41,13 +41,12 @@ function retrieveDep(name) {
     }
     return modules[name];
 }
-function cage(name, dep, define, fail) {
+function cage(name, dep, define) {
     if (RE_PROVIDE.test(name)) {
         name = name.replace(RE_PROVIDE, '');
     } else {
         // this case represents a simple use
         // not a definition
-        fail = define;
         define = dep;
         dep = name;
         name = NIL;
@@ -58,7 +57,6 @@ function cage(name, dep, define, fail) {
     } else if (typeof dep == 'string') {
         dep = [retrieveDep(dep)];
     } else {
-        fail = define;
         define = dep;
         dep = [];
     }
@@ -76,16 +74,14 @@ function cage(name, dep, define, fail) {
             .then(defineModuleWith)
             .then(resolve, reject);
     }
+    var prom = new Promise(definitionResolver, name + 'Promise');
     if (name) {
         if (modules[name]) {
             return Promise.reject('Tried to provide an already defined module [' + name + ']');
         }
-        return (modules[name] = new Promise(definitionResolver, name + 'Promise'));
-    } else {
-        return allDepsReady
-            .then(defineModuleWith)
-            .or(handleDepError);
+        modules[name] = prom;
     }
+    return prom;
 }
 load = function defaultLoad(name) {
     throw 'No external loading is defined [module "' + name + '" not found]';
