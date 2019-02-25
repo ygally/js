@@ -12,7 +12,7 @@
 var Promise = module.require('./Promise'),
     NIL,
     modules = {},
-    downloads = {},
+    loading = {},
     RE_PROVIDE = /^provide:/,
     EMPTY = {},
     load;
@@ -30,13 +30,15 @@ function has(moduleName) {
 }
 function retrieveDep(name) {
     if (!modules[name]) {
-        function returnModule() {
+        function returnModule(m) {
+            // M could contain module Prom
+            // we could store it now
             return modules[name];
         }
-        if (!downloads[name]) {
-            downloads[name] = Promise.resolve(load(name));
+        if (!loading[name]) {
+            loading[name] = Promise.resolve(load(name));
         }
-        return downloads[name]
+        return loading[name]
             .then(returnModule, handleDepError);
     }
     return modules[name];
@@ -84,7 +86,7 @@ function cage(name, dep, define) {
     return prom;
 }
 load = function defaultLoad(name) {
-    throw 'No external loading is defined [module "' + name + '" not found]';
+    return Promise.reject('No external loading is defined [module "' + name + '" not found]');
 };
 cage.has = has;
 cage.setExternalLoad = setExternalLoad;

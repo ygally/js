@@ -239,13 +239,13 @@ function isPromise(p) {
 
 function resolve(obj) {
   if (obj) {
-     if (isFunction(obj)) {
-         return new Promise(
-            $callable(obj),
-            'resolved~fct~'+(puid++)
-         );
-     }
-     if (isPromise(obj)) { return obj; }
+      if (isPromise(obj)) { return obj; }
+      if (isFunction(obj)) {
+          return new Promise(
+              $callable(obj),
+              'resolved~fct~'+(puid++)
+          );
+      }
   }
   return new Promise(
      function resolvePromDefine(ya) { ya(obj); },

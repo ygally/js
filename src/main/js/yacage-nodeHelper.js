@@ -1,27 +1,21 @@
 /*global module*/
-cage = module.require('./yacage');
+var cage = module.require('./yacage'),
+    Promise = module.require('./Promise');
 function isFunction(f) {
     return typeof f == 'function';
 }
-function provideExternal(name, definition) {
-    //console.log('providing Def for', name,
-       //     '[', (definition && Object.keys(definition).length ||0),
-       //     'props ; already exists?',!!moduleMap[name], '] :', definition);
-    if (!cage.has(name) && definition && (Object.keys(definition).length || isFunction(definition))) {
-        //console.log('got def :', definition);
-        cage(
-            'provide:' + name,
-            new Promise(resolve => resolve(definition)),
-            function onNodeModuleFailed2(err) {
-                console.error('Module "' + name + '" failed (2) to load with "module.require()"', err);
-               
-            })
-        .or(function onNodeModuleFailed(err) {
+function resolveAsData(func) {
+    return new Promise(function(resolve) {
+        return resolve(func);
+    });
+}
+function provide(name, definition) {
+    cage('provide:' + name, definition)
+        .or(function onModuleFailed(err) {
             console.error('Module "' + name + '" failed to load with "module.require()"', err);
         });
-    }
 }
-function defineViaRequire(name) {
+function define(name) {
     try {
         return module.require('./' + name);
     } catch(e) {
@@ -45,7 +39,15 @@ function defineViaRequire(name) {
         }
     }
 }
-function loadViaRequire(name) {
-    provideExternal(name, defineViaRequire(name));
+function load(name) {
+    var def = define(name);
+    if (def && (Object.keys(def).length
+            || isFunction(def))) {
+        def = resolveAsData(def);
+        if (!cage.has(name)) {
+            provide(name, def);
+        }
+    }
+    return def;
 }
-cage.setExternalLoad(loadViaRequire);
+cage.setExternalLoad(load);
