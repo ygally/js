@@ -166,7 +166,7 @@ test('after define then', function(a) {
     cage(
         'provide:square2',
         'multiplier',
-        mul => (a => mul(a, a)+1)
+        mul => (a => mul(a, a))
     ).then(function useSquare(sqr) {
         a.equals(sqr(3), 9, '3 au carré : 9');
         a.end();
