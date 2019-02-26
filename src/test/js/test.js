@@ -10,7 +10,7 @@ var logger = {
   }
 };
 //helpers
-var NIL;
+var NIL, errorCount = 0;
 function isString(s) {
     return typeof s === 'string';
 }
@@ -25,10 +25,16 @@ function pass(name, msg) {
     );
 }
 function fail(name, msg) {
+    ++errorCount;
     logger.error(
         name+': FAIL'
         +(msg? ' ~~! '+msg: '')
     );
+}
+function end() {
+    if (errorCount) {
+        process.exit(errorCount);
+    }
 }
 function assertEquals(
        name, msg,
@@ -51,12 +57,12 @@ function assertEquals(
 }
 var tuid = 0;
 var DEFAULT_OPTS = {time:true};
-function test(name, opt, process) {
+function test(name, opt, execute) {
    if (isFunction(name)) {
-       process = name;
+       execute = name;
        name = 'test~'+(++tuid);
    } else if (isFunction(opt)) {
-       process = opt;
+       execute = opt;
        opt = NIL;
    }
    opt = opt || DEFAULT_OPTS;
@@ -83,14 +89,12 @@ function test(name, opt, process) {
        },
        fail: function contextFail(msg){
           fail(tmFromStart() + name, msg);
-          context.end();
        },
-       // FIXME something to tell test is over
-       end: noop
+       end: end
    };
    t0 = +new Date();
    // call test process
-   process(context);
+   execute(context);
 }
 if (module) {
     module.exports = test;
