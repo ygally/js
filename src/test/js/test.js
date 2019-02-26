@@ -33,7 +33,7 @@ function fail(name, msg) {
 }
 function end() {
     if (errorCount) {
-        process.exit(errorCount);
+        process.exit(2);
     }
 }
 function assertEquals(
