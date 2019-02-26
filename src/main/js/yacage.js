@@ -28,21 +28,23 @@ function handleDepError(err) {
 function has(name) {
     return !!modules[name];
 }
-function getterOfModuleFor(name) {
+function getModuleFor(name) {
     return function getModule() {
         return modules[name];
     }
 }
-function retrieveDep(name) {
-    var getModule = getterOfModuleFor(name);
-    if (has(name)) {
-        return getModule();
-    }
+function loadDep(name) {
     if (!loading[name]) {
         loading[name] = Promise.resolve(load(name));
     }
     return loading[name]
-        .then(getModule, handleDepError);
+        .then(getModuleFor(name), handleDepError);
+}
+function retrieveDep(name) {
+    if (has(name)) {
+        return modules[name];
+    }
+    return loadDep(name);
 }
 function cage(name, dep, define) {
     if (RE_PROVIDE.test(name)) {
