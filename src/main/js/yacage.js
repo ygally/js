@@ -25,23 +25,24 @@ function setExternalLoad(extLoad) {
 function handleDepError(err) {
     throw 'Dependency Error: ' + err;
 }
-function has(moduleName) {
-    return !!modules[moduleName];
+function has(name) {
+    return !!modules[name];
+}
+function getterOfModuleFor(name) {
+    return function getModule() {
+        return modules[name];
+    }
 }
 function retrieveDep(name) {
-    if (!modules[name]) {
-        function returnModule(m) {
-            // M could contain module Prom
-            // we could store it now
-            return modules[name];
-        }
-        if (!loading[name]) {
-            loading[name] = Promise.resolve(load(name));
-        }
-        return loading[name]
-            .then(returnModule, handleDepError);
+    var getModule = getterOfModuleFor(name);
+    if (has(name)) {
+        return getModule();
     }
-    return modules[name];
+    if (!loading[name]) {
+        loading[name] = Promise.resolve(load(name));
+    }
+    return loading[name]
+        .then(getModule, handleDepError);
 }
 function cage(name, dep, define) {
     if (RE_PROVIDE.test(name)) {
