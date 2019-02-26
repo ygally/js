@@ -4,7 +4,6 @@ jobs:
     docker:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       - image: circleci/node:10.0.0-browsers
-    #working_directory: ~/js
     steps:
       - checkout
       - restore_cache:

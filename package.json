@@ -2,6 +2,6 @@
   "name": "jstools",
   "version": "0.0.2",
   "scripts": {
-    "test": "node src/test/js/yacageTest.js"
+    "test": "node src/test/js/*Test.js"
   }
 }
