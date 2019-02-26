@@ -2,6 +2,6 @@
   "name": "jstools",
   "version": "0.0.2",
   "scripts": {
-    "test": "node src/test/js/*Test.js"
+    "test": "for s in src/test/js/*Test.js; do node ${s}; done"
   }
 }
