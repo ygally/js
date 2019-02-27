@@ -84,7 +84,8 @@ cage(
 	       	function indexesForOne(f) {
 	       	    return simples.indexesFor(f)
 	       	        || groups.indexesFor(f)
-	       	        || ranges.indexesFor(f);
+	       	        || ranges.indexesFor(f)
+	       	        || [];
 	       }
 	       function indexesUnion(names) {
 	       	    return map.call(names, indexesForOne)

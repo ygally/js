@@ -2,6 +2,7 @@
 var cage = module.require('../../main/js/yacage');
 module.require('../../main/js/yacage-nodeHelper');
 cage(['test', 'filters'], function usingFilters(test, filterLib) {
+    test.mute();
     function numerically(a, b) {
         return Math.sign(a-b);
     }
@@ -241,6 +242,9 @@ cage(['test', 'filters'], function usingFilters(test, filterLib) {
             .toOriginals()
             .map(p=>p.name).sort().join(','),
             'juice');
+        a.equals(filters.indexesFor(['letter:J'])
+            .and(['type:gaz', 'type:solid'])
+            .length, 0);
     	   a.end();
     });
 });
