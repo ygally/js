@@ -1,12 +1,15 @@
 /*global module*/
 var GLOBAL_DBG = 1;
+var VERBOSE = 1;
 var PFX = '';
 var logger = {
   log: function(msg) {
-     console.log(PFX+msg);
+     if (VERBOSE) {
+         console.log(PFX+msg);
+     }
   },
   error: function(msg) {
-     console.error(PFX+msg);
+     console.log(PFX+msg);
   }
 };
 //helpers
@@ -96,6 +99,9 @@ function test(name, opt, execute) {
    // call test process
    execute(context);
 }
+test.mute = function() {
+    VERBOSE = 0;
+};
 if (module) {
     module.exports = test;
 }

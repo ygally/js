@@ -2,7 +2,7 @@
 var test = module.require('./test');
 var Promise = module.require('../../main/js/Promise');
 var cage = module.require('../../main/js/yacage');
-
+test.mute();
 var EMULATED_REMOTE = {
     'pawa': function pawa() {
         cage(
