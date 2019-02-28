@@ -22,9 +22,6 @@ function isFunction(f) {
 function setExternalLoad(extLoad) {
     load = extLoad;
 }
-function handleDepError(err) {
-    throw 'Dependency Error: ' + err;
-}
 function has(name) {
     return !!modules[name];
 }
@@ -38,7 +35,7 @@ function loadDep(name) {
         loading[name] = Promise.resolve(load(name));
     }
     return loading[name]
-        .then(getModuleFor(name), handleDepError);
+        .then(getModuleFor(name));
 }
 function retrieveDep(name) {
     if (has(name)) {
@@ -65,21 +62,26 @@ function cage(name, dep, define) {
         define = dep;
         dep = [];
     }
-    function defineModuleWith(deps) {
+    function applyDefWith(deps) {
         try{
-            return isFunction(define)?
-                define.apply(NIL, deps): define;
+            return define.apply(NIL, deps);
         } catch(e) {
-            console.error('Error while defining/executing module ' + (name? '"' + name + '" ': ''), e);
+            console.error(e);
+            if (name) {
+                throw 'Error while defining module ' + name;
+            }
         }
     }
-    var allDepsReady = Promise.all(dep, 'all_' + (name||'') + '_deps');
-    function definitionResolver(resolve, reject) {
-        allDepsReady
-            .then(defineModuleWith)
-            .then(resolve, reject);
+    function defineModuleWith(deps) {
+        return isFunction(define)?
+            applyDefWith(deps):
+            define;
     }
-    var prom = new Promise(definitionResolver, name + 'Promise');
+    var prom = new Promise(function(give, fail) {
+        Promise.all(dep)
+            .then(defineModuleWith)
+            .then(give, /*or*/ fail);
+    });
     if (name) {
         if (modules[name]) {
             return Promise.reject('Tried to provide an already defined module [' + name + ']');
