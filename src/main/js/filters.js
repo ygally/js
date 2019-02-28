@@ -1,7 +1,3 @@
-/*
-	 FIXME 004 : add support for intersection and union of filters index (for filters combinations)
-*/
-
 /*global module*/
 var cage = module.require('./yacage');
 cage(
