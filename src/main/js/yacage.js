@@ -15,7 +15,11 @@ var Promise = module.require('./Promise'),
     loading = {},
     RE_PROVIDE = /^provide:/,
     EMPTY = {},
-    load;
+    load,
+    isArray = Array.isArray;
+function isString(s) {
+    return typeof s == 'string';
+}
 function isFunction(f) {
     return typeof f == 'function';
 }
@@ -43,6 +47,26 @@ function retrieveDep(name) {
     }
     return loadDep(name);
 }
+function newModFrom(name, dependencies, define) {
+    function applyDefWith(deps) {
+        try{
+            return define.apply(NIL, deps);
+        } catch(e) {
+            console.error(e);
+            throw 'Error while running ' + name;
+        }
+    }
+    function defineModuleWith(deps) {
+        return isFunction(define)?
+            applyDefWith(deps):
+            define;
+    }
+    return new Promise(function(give, fail) {
+        Promise.all(dependencies.map(retrieveDep))
+            .then(defineModuleWith)
+            .then(give, /*or*/ fail);
+    });
+}
 function cage(name, dep, define) {
     if (RE_PROVIDE.test(name)) {
         name = name.replace(RE_PROVIDE, '');
@@ -56,34 +80,13 @@ function cage(name, dep, define) {
     if (modules[name]) {
         return Promise.reject('Tried to provide an already defined module [' + name + ']');
     }
-    if (Array.isArray(dep)) {
-        dep = dep.map(retrieveDep);
-    } else if (typeof dep == 'string') {
-        dep = [retrieveDep(dep)];
-    } else {
+    if (isString(dep)) {
+        dep = [dep];
+    } else if (!isArray(dep)) {
         define = dep;
         dep = [];
     }
-    function applyDefWith(deps) {
-        try{
-            return define.apply(NIL, deps);
-        } catch(e) {
-            console.error(e);
-            if (name) {
-                throw 'Error while defining module ' + name;
-            }
-        }
-    }
-    function defineModuleWith(deps) {
-        return isFunction(define)?
-            applyDefWith(deps):
-            define;
-    }
-    var prom = new Promise(function(give, fail) {
-        Promise.all(dep)
-            .then(defineModuleWith)
-            .then(give, /*or*/ fail);
-    });
+    var prom = newModFrom(name||'no-name', dep, define);
     if (name) {
         modules[name] = prom;
     }
