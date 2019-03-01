@@ -53,7 +53,9 @@ function cage(name, dep, define) {
         dep = name;
         name = NIL;
     }
-    var definition;
+    if (modules[name]) {
+        return Promise.reject('Tried to provide an already defined module [' + name + ']');
+    }
     if (Array.isArray(dep)) {
         dep = dep.map(retrieveDep);
     } else if (typeof dep == 'string') {
@@ -83,9 +85,6 @@ function cage(name, dep, define) {
             .then(give, /*or*/ fail);
     });
     if (name) {
-        if (modules[name]) {
-            return Promise.reject('Tried to provide an already defined module [' + name + ']');
-        }
         modules[name] = prom;
     }
     return prom;
