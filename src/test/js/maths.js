@@ -1,5 +1,5 @@
-/*global require*/
-var yatest = require('./test');
+/*global module*/
+var yatest = module.require('./test');
 //var maths = require('../../main/js/maths');
 
 yatest('float inconsistency', function(a) {
