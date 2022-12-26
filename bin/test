@@ -1,0 +1,40 @@
+#!/bin/bash
+
+[[ -n "${REPODIR}" ]] || declare -rx REPODIR=${HOME}/repos/js
+
+red='\\e[1;31m'
+green='\\e[1;32m'
+endColor='\\e[0m'
+allTests() {
+    for s in ${REPODIR}/src/test/js/*Test.js; do
+        node $s
+    done
+}
+
+colored() {
+    local cmd="$1"
+    echo -e "$(${cmd} | sed -r "s/(PASS(ED)?)([ \t]+~~[$].*)?$/${green}\1${endColor}\3/" | sed -r "s/ERROR/${red}\0${endColor}/")"
+}
+
+silent() {
+    local cmd="$1"
+    ${cmd} | grep -vE "[ \t]+PASS(ED)?([ \t]+|$)"
+}
+
+SILENT=''
+while [[ "${1:0:1}" == "-" ]]; do
+    case "$1" in
+        --silent|-s) SILENT='true';;
+        *) echo >&2 "ERROR: unknown option '$1'"; exit 1;;
+    esac
+    shift
+done
+
+[[ -n "${SILENT}" ]] && {
+    silent colored allTests
+    true
+} || {
+    colored allTests
+}
+
+exit
